@@ -9,18 +9,30 @@ interface AppInitializerProps {
 }
 
 const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+  const [isSplashAnimationFinished, setIsSplashAnimationFinished] = useState(false);
 
-  // This component only needs to manage the splash screen state.
-  // The actual timing and fade-out logic is handled within SplashScreen.tsx.
-  // When onFinished is called by SplashScreen, we hide it and show children.
+  useEffect(() => {
+    // This effect runs only on the client, after the component has mounted.
+    setIsClient(true);
+  }, []);
 
-  if (showSplash) {
-    // The body needs to be available for SplashScreen to mount correctly
-    // We return the splash screen directly, it will cover the viewport.
-    return <SplashScreen onFinished={() => setShowSplash(false)} duration={1000} />;
+  const handleSplashFinished = () => {
+    setIsSplashAnimationFinished(true);
+  };
+
+  if (!isClient) {
+    // Render nothing (or a static placeholder) on the server and on the initial client render pass.
+    // This ensures the server and client match before client-specific logic runs.
+    return null; 
   }
 
+  if (!isSplashAnimationFinished) {
+    // Once the client has mounted (isClient is true), show the splash screen.
+    return <SplashScreen onFinished={handleSplashFinished} duration={1000} />;
+  }
+
+  // After the splash screen is finished, render the actual application children.
   return <>{children}</>;
 };
 
