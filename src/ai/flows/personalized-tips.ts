@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -61,10 +62,11 @@ const prompt = ai.definePrompt({
   {{/each}}
   Monthly Electricity Bill Goal: {{{monthlyElectricityBillGoal}}}
 
-  Generate a list of personalized energy-saving tips that the user can implement to reduce their energy consumption and achieve their monthly electricity bill goal. The tips should be specific to the user's situation and actionable.
+  Generate a list of personalized energy-saving tips. These tips should be specific to the user's situation and actionable.
+  Crucially, tailor your tips to the specific types of appliances listed (using the "Device Name"). For example, if a 'Geyser' or 'Water Heater' is listed with high usage, suggest tips relevant to water heating efficiency. If an 'Air Conditioner' or 'AC' is listed, provide advice for AC efficiency, like cleaning filters or using a programmable thermostat. If 'Lights' or 'Lamps' are mentioned, suggest using LED bulbs or turning them off in unused rooms. Avoid generic advice; make each tip relevant to one or more of the user's actual appliances and their usage patterns.
 
   Tips:
-  `, // Ensure Handlebars templating is correctly used
+  `,
 });
 
 const personalizedTipsFlow = ai.defineFlow(
@@ -78,3 +80,4 @@ const personalizedTipsFlow = ai.defineFlow(
     return output!;
   }
 );
+

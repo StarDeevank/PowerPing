@@ -1,3 +1,4 @@
+
 // src/ai/flows/intelligent-reminders.ts
 'use server';
 
@@ -56,18 +57,22 @@ const prompt = ai.definePrompt({
   name: 'generateReminderRulesPrompt',
   input: {schema: GenerateReminderRulesInputSchema},
   output: {schema: GenerateReminderRulesOutputSchema},
-  prompt: `You are an AI assistant that helps users save energy by generating reminder rules for their appliances.
+  prompt: `You are an AI assistant that helps users save energy by generating intelligent reminder rules for their appliances.
 
-  Based on the following home configuration and usage settings, generate a list of reminder rules that will help the user achieve their monthly electricity bill goal. The rules should be specific and actionable.
+  Based on the following home configuration and usage settings, generate a list of reminder rules. These rules should help the user achieve their monthly electricity bill goal and be specific and actionable.
+  Tailor the reminder rules to the specific types of appliances listed (using the "Device Name"). For example, a reminder for a 'Fan' (e.g., "Turn off fan in {{room}} if unused") might be different from a reminder for an 'Oven' (e.g., "Don't forget to turn off the {{deviceName}} in the {{room}} after use.").
+  Consider common energy wasting scenarios for each type of appliance and create rules to address them. For instance, suggest turning off lights in unoccupied rooms, or not leaving entertainment devices (like TVs or Game Consoles) on standby for extended periods.
 
   Home Size: {{homeSize}}
   Number of Rooms: {{numberOfRooms}}
-  Appliances: {{#each appliances}}{deviceName} in {room} (Estimated Daily Usage: {{estimatedDailyUsage}} hours){{#unless @last}}, {{/unless}}{{/each}}
+  Appliances:
+  {{#each appliances}}
+  - Device: {{deviceName}}, Room: {{room}}, Estimated Daily Usage: {{estimatedDailyUsage}} hours
+  {{/each}}
   Monthly Electricity Bill Goal: {{monthlyElectricityBillGoal}}
 
-  Consider common energy wasting scenarios and create rules to address them.
-
   Output the reminder rules in the format specified in the output schema.
+  Ensure each rule clearly mentions the appliance it pertains to.
   `,
 });
 
@@ -82,3 +87,4 @@ const generateReminderRulesFlow = ai.defineFlow(
     return output!;
   }
 );
+
