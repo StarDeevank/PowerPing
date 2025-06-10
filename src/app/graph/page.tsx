@@ -1,4 +1,5 @@
-// This page is no longer part of the WattWatcher AI application.
+
+// This page is no longer part of the PowerPing application.
 // It was related to the previous Airbnb-style UI.
 // To re-enable, ensure it's linked appropriately and fits the app's context.
 

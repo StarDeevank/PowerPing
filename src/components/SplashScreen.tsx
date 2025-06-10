@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import WattWatcherLogo from '@/components/icons/WattWatcherLogo';
+import PowerPingLogo from '@/components/icons/WattWatcherLogo';
 import { cn } from '@/lib/utils';
 
 interface SplashScreenProps {
@@ -43,7 +43,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinished, duration = 1000
       )}
       style={{ opacity: opacity, transitionDuration: `${FADE_DURATION_MS}ms` }}
     >
-      <WattWatcherLogo className="h-20 w-auto mb-6 opacity-90" />
+      <PowerPingLogo className="h-20 w-auto mb-6 opacity-90" />
       <p className="text-base font-light text-muted-foreground tracking-wider">
         Made by Deevank
       </p>

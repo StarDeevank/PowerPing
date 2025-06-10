@@ -1,8 +1,8 @@
 
 "use client";
-// This component is currently not actively used in the WattWatcher AI application.
+// This component is currently not actively used in the PowerPing application.
 // It was part of the previous Airbnb-style UI.
-// If needed for WattWatcher (e.g., for an analytics dashboard), it can be adapted.
+// If needed for PowerPing (e.g., for an analytics dashboard), it can be adapted.
 
 import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -22,7 +22,7 @@ const MAX_DATA_POINTS = 30;
 const chartConfig = {
   value: {
     label: "Value",
-    color: "hsl(var(--primary))", // Will use WattWatcher primary color
+    color: "hsl(var(--primary))", // Will use PowerPing primary color
   },
 } satisfies ChartConfig;
 

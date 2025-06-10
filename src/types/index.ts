@@ -1,5 +1,5 @@
 
-// WattWatcher AI Types
+// PowerPing Types
 export interface Appliance {
   id: string;
   deviceName: string;
@@ -87,7 +87,7 @@ export interface IntelligentRemindersGenAIOutput {
 }
 
 
-// Types for UI display (WattWatcher specific)
+// Types for UI display (PowerPing specific)
 export interface DisplayPersonalizedTip {
   id: string;
   text: string;
@@ -101,4 +101,7 @@ export interface DisplayIntelligentReminder {
 
 // Removed Airbnb-style types
 // export interface Listing { ... }
-// export interface RealTimeDataPoint { ... }
+export interface RealTimeDataPoint { // Kept for RealTimeGraph if re-enabled
+  time: number;
+  value: number;
+}

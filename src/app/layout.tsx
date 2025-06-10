@@ -6,8 +6,8 @@ import SiteHeader from '@/components/site-header';
 import AppInitializer from '@/components/AppInitializer'; // Import new component
 
 export const metadata: Metadata = {
-  title: 'WattWatcher AI',
-  description: 'Monitor and optimize your energy consumption with AI-powered insights.',
+  title: 'PowerPing',
+  description: 'Monitor and optimize your energy consumption with PowerPing.',
 };
 
 export default function RootLayout({

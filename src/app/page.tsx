@@ -62,20 +62,20 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    const storedHomeConfig = localStorage.getItem('wattwatcher_homeConfig');
+    const storedHomeConfig = localStorage.getItem('powerping_homeConfig');
     if (storedHomeConfig) setHomeConfiguration(JSON.parse(storedHomeConfig));
-    const storedUsageSettings = localStorage.getItem('wattwatcher_usageSettings');
+    const storedUsageSettings = localStorage.getItem('powerping_usageSettings');
     if (storedUsageSettings) setUsageSettings(JSON.parse(storedUsageSettings));
-    const storedAppliances = localStorage.getItem('wattwatcher_appliances');
+    const storedAppliances = localStorage.getItem('powerping_appliances');
     if (storedAppliances) setAppliances(JSON.parse(storedAppliances));
-    const storedSleepMode = localStorage.getItem('wattwatcher_sleepMode');
+    const storedSleepMode = localStorage.getItem('powerping_sleepMode');
     if (storedSleepMode) setIsSleepModeActive(JSON.parse(storedSleepMode));
   }, []);
 
-  useEffect(() => { localStorage.setItem('wattwatcher_homeConfig', JSON.stringify(homeConfiguration));}, [homeConfiguration]);
-  useEffect(() => { localStorage.setItem('wattwatcher_usageSettings', JSON.stringify(usageSettings));}, [usageSettings]);
-  useEffect(() => { localStorage.setItem('wattwatcher_appliances', JSON.stringify(appliances));}, [appliances]);
-  useEffect(() => { localStorage.setItem('wattwatcher_sleepMode', JSON.stringify(isSleepModeActive));}, [isSleepModeActive]);
+  useEffect(() => { localStorage.setItem('powerping_homeConfig', JSON.stringify(homeConfiguration));}, [homeConfiguration]);
+  useEffect(() => { localStorage.setItem('powerping_usageSettings', JSON.stringify(usageSettings));}, [usageSettings]);
+  useEffect(() => { localStorage.setItem('powerping_appliances', JSON.stringify(appliances));}, [appliances]);
+  useEffect(() => { localStorage.setItem('powerping_sleepMode', JSON.stringify(isSleepModeActive));}, [isSleepModeActive]);
 
   const fetchAIData = useCallback(async () => {
     if (isSleepModeActive || !homeConfiguration.homeSize || appliances.length === 0) {
@@ -241,7 +241,7 @@ export default function DashboardPage() {
         <div className="p-6 rounded-lg border bg-card text-card-foreground shadow-sm flex items-center space-x-3">
           <Info className="h-6 w-6 text-accent" />
           <div>
-            <p className="font-semibold">Welcome to WattWatcher AI!</p>
+            <p className="font-semibold">Welcome to PowerPing!</p>
             <p className="text-sm text-muted-foreground">Configure your home and add appliances in 'Settings', then add appliances in the 'Appliances' tab.</p>
           </div>
         </div>

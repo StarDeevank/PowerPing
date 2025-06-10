@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-const WattWatcherLogo = (props: SVGProps<SVGSVGElement>) => (
+const PowerPingLogo = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 120 40" // Adjusted viewBox for a more horizontal logo
@@ -25,4 +25,4 @@ const WattWatcherLogo = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default WattWatcherLogo;
+export default PowerPingLogo;
