@@ -267,21 +267,24 @@ export default function DashboardPage() {
       </Dialog>
 
       {!hasInitialSetup && !isSleepModeActive && (
-        <Card className="border-primary/30 bg-card shadow-md">
+        <Card className="border-accent bg-muted shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center text-xl text-card-foreground">
-              <Info className="h-6 w-6 mr-3 text-primary" /> Welcome to PowerPing!
+            <CardTitle className="flex items-center text-2xl text-foreground">
+              <Info className="h-7 w-7 mr-3 text-accent" /> Welcome to PowerPing!
             </CardTitle>
+            <CardDescription className="text-md text-muted-foreground pt-1">
+              Let's get your energy monitoring started.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-base text-muted-foreground">
-              To get started, please configure your home and add your appliances.
+          <CardContent className="pt-2">
+            <p className="text-base text-foreground/90 mb-6">
+              Please configure your home details and add your first appliance to unlock insights.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-4">
-              <Button onClick={() => setIsHomeConfigDialogOpen(true)} variant="default" size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 flex-1 sm:flex-none">
+              <Button onClick={() => setIsHomeConfigDialogOpen(true)} variant="default" size="lg" className="bg-primary text-primary-foreground hover:bg-primary/80 shadow-md flex-1 sm:flex-none py-3 text-base">
                 <Home className="mr-2 h-5 w-5" /> Configure Home
               </Button>
-              <Button onClick={openAddApplianceForm} variant="outline" size="lg" className="border-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground/90 flex-1 sm:flex-none">
+              <Button onClick={openAddApplianceForm} variant="outline" size="lg" className="border-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground/90 shadow-md flex-1 sm:flex-none py-3 text-base">
                 <PlusCircle className="mr-2 h-5 w-5" /> Add First Appliance
               </Button>
             </div>
@@ -495,3 +498,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
