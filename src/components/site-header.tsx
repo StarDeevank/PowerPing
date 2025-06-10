@@ -3,32 +3,31 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { HomeIcon, SlidersHorizontal, PlusCircle, Zap } from 'lucide-react'; // Adjusted icons
-import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // To trigger forms
+import { HomeIcon, SlidersHorizontal, PlusCircle, Zap, Moon, Sun } from 'lucide-react';
 
 interface SiteHeaderProps {
   onOpenHomeConfig?: () => void;
   onOpenUsageSettings?: () => void;
   onOpenAddAppliance?: () => void;
+  isSleepModeActive?: boolean;
+  onToggleSleepMode?: () => void;
 }
 
-// Note: The onOpen* props will be passed from the page to control dialog visibility.
-// If not passed, the buttons won't trigger dialogs directly from here.
-// The page itself will manage Dialog open state and pass DialogTrigger as children to these buttons.
-
-const SiteHeader: React.FC<SiteHeaderProps> = ({ onOpenHomeConfig, onOpenUsageSettings, onOpenAddAppliance }) => {
+const SiteHeader: React.FC<SiteHeaderProps> = ({
+  onOpenHomeConfig,
+  onOpenUsageSettings,
+  onOpenAddAppliance,
+  isSleepModeActive,
+  onToggleSleepMode
+}) => {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 mb-6">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center space-x-2">
           <Zap className="h-8 w-8 text-primary" />
           <span className="font-bold text-xl font-headline text-foreground">WattWatcher AI</span>
         </Link>
         <div className="flex items-center space-x-2">
-          {/*
-            The actual DialogTrigger and DialogContent will be managed in page.tsx
-            These buttons act as visual triggers, their onClick can be used by the parent page.
-          */}
           {onOpenHomeConfig && (
             <Button variant="outline" size="sm" onClick={onOpenHomeConfig} aria-label="Configure Home">
               <HomeIcon className="mr-2 h-4 w-4" />
@@ -47,6 +46,12 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ onOpenHomeConfig, onOpenUsageSe
               Add Appliance
             </Button>
           )}
+           {onToggleSleepMode && (
+            <Button variant="outline" size="sm" onClick={onToggleSleepMode} aria-label={isSleepModeActive ? "Deactivate Sleep Mode" : "Activate Sleep Mode"}>
+              {isSleepModeActive ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+              {isSleepModeActive ? 'Awake Mode' : 'Sleep Mode'}
+            </Button>
+          )}
         </div>
       </div>
     </header>
@@ -54,3 +59,4 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ onOpenHomeConfig, onOpenUsageSe
 };
 
 export default SiteHeader;
+

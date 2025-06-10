@@ -1,8 +1,9 @@
+
 "use client";
 
 import type { EnergyPredictionData } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Zap, CalendarDays } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, CalendarDays, Brain } from "lucide-react"; // Added Brain
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface EnergyPredictionCardProps {
@@ -18,8 +19,9 @@ const EnergyPredictionCard: React.FC<EnergyPredictionCardProps> = ({ data, isLoa
           <CardTitle className="flex items-center">
             <Zap className="mr-2 h-6 w-6 text-primary" />
             Energy Prediction
+            <Brain className="ml-2 h-5 w-5 text-primary/80" />
           </CardTitle>
-          <CardDescription>Estimated daily and monthly usage.</CardDescription>
+          <CardDescription>Estimating daily and monthly usage...</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -41,6 +43,7 @@ const EnergyPredictionCard: React.FC<EnergyPredictionCardProps> = ({ data, isLoa
           <CardTitle className="flex items-center">
             <Zap className="mr-2 h-6 w-6 text-primary" />
             Energy Prediction
+             <Brain className="ml-2 h-5 w-5 text-primary/80" titleAccess="AI Generated Prediction" />
           </CardTitle>
           <CardDescription>No prediction data available. Configure your home and appliances.</CardDescription>
         </CardHeader>
@@ -59,8 +62,9 @@ const EnergyPredictionCard: React.FC<EnergyPredictionCardProps> = ({ data, isLoa
         <CardTitle className="flex items-center text-xl">
           <Zap className="mr-2 h-6 w-6 text-primary" />
           Energy Prediction
+          <Brain className="ml-2 h-5 w-5 text-primary/80" titleAccess="AI Generated Prediction"/>
         </CardTitle>
-        <CardDescription>Estimated daily and monthly energy usage and costs.</CardDescription>
+        <CardDescription>AI-estimated daily and monthly energy usage and costs.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -98,3 +102,4 @@ const EnergyPredictionCard: React.FC<EnergyPredictionCardProps> = ({ data, isLoa
 };
 
 export default EnergyPredictionCard;
+

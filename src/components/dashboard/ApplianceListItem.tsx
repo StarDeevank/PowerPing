@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Appliance } from "@/types";
@@ -12,9 +13,19 @@ interface ApplianceListItemProps {
   onToggleStatus: (id: string, status: boolean) => void;
   onEdit: (appliance: Appliance) => void;
   onDelete: (id: string) => void;
+  isSleepModeActive?: boolean; // Added to disable toggle in sleep mode
 }
 
-const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onToggleStatus, onEdit, onDelete }) => {
+const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onToggleStatus, onEdit, onDelete, isSleepModeActive }) => {
+  const handleToggle = (checked: boolean) => {
+    if (isSleepModeActive && checked) {
+      // Optionally show a toast or prevent toggle
+      console.warn("Cannot turn on appliance during sleep mode.");
+      return;
+    }
+    onToggleStatus(appliance.id, checked);
+  };
+  
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -24,8 +35,9 @@ const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onTogg
         </div>
         <Switch
           checked={appliance.status}
-          onCheckedChange={(checked) => onToggleStatus(appliance.id, checked)}
+          onCheckedChange={handleToggle}
           aria-label={`Toggle ${appliance.deviceName} status`}
+          disabled={isSleepModeActive && appliance.status === false} // Disable turning ON during sleep mode
         />
       </CardHeader>
       <CardContent>
@@ -36,10 +48,10 @@ const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onTogg
           Est. Daily Usage: {appliance.estimatedDailyUsage} hrs
         </p>
         <div className="mt-4 flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => onEdit(appliance)} aria-label={`Edit ${appliance.deviceName}`}>
+          <Button variant="outline" size="sm" onClick={() => onEdit(appliance)} aria-label={`Edit ${appliance.deviceName}`} disabled={isSleepModeActive}>
             <Edit3 className="h-4 w-4 mr-1" /> Edit
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => onDelete(appliance.id)} aria-label={`Delete ${appliance.deviceName}`}>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(appliance.id)} aria-label={`Delete ${appliance.deviceName}`} disabled={isSleepModeActive}>
             <Trash2 className="h-4 w-4 mr-1" /> Delete
           </Button>
         </div>
