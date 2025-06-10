@@ -83,7 +83,7 @@ export default function DashboardPage() {
       setEnergyPrediction(null);
       setPersonalizedTips([]);
       setIntelligentReminders([]);
-      if (isSleepModeActive && homeConfiguration.homeSize && appliances.length > 0) { // Only show toast if setup was complete
+      if (isSleepModeActive && homeConfiguration.homeSize && appliances.length > 0) { 
         toast({ title: "Sleep Mode Active", description: "AI insights are paused." });
       }
       return;
@@ -142,14 +142,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0); 
-        setLiveGraphData([]); // Clear graph data in sleep mode
+        setLiveGraphData([]); 
         return;
     }
     const interval = setInterval(() => {
       let totalWattage = 0;
       appliances.forEach(app => {
         if (app.status) {
-          // Simulate wattage: base 50W + random fluctuation up to 50W + small factor of daily usage
           totalWattage += 50 + (Math.random() * 50) + (app.estimatedDailyUsage * 10); 
         }
       });
@@ -165,20 +164,16 @@ export default function DashboardPage() {
         return newData;
       });
       
-      // Using a simplified average cost per kWh. Replace with a more accurate local value if needed.
-      const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15; // INR 7/kWh, USD 0.15/kWh
-      // Calculate KWh based on current wattage being constant for an hour, then scale for the interval
+      const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15; 
       const currentKWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / 1000 / 3600); 
       
       setEstimatedBillToday(prevBill => parseFloat((prevBill + (currentKWhForInterval * costPerKWh)).toFixed(2)));
-      // Simple projection for the month. Could be more sophisticated.
       setEstimatedBillMonth(prev => {
-          // Estimate based on current rate over 30 days. This is a rough estimate.
           const hourlyCost = (newCurrentWattage / 1000) * costPerKWh;
           return parseFloat((hourlyCost * 24 * 30).toFixed(2));
       });
 
-    }, REALTIME_UPDATE_INTERVAL); // Update interval
+    }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
   }, [appliances, usageSettings, isSleepModeActive, timeCounter]);
 
@@ -219,11 +214,10 @@ export default function DashboardPage() {
     const newSleepModeState = !isSleepModeActive;
     setIsSleepModeActive(newSleepModeState);
     if (newSleepModeState) {
-      setEstimatedBillToday(0); // Reset daily bill when entering sleep mode
+      setEstimatedBillToday(0); 
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats and some controls are limited." });
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal. AI insights will refresh." });
-      // fetchAIData will be called by its own useEffect dependency on isSleepModeActive
     }
   };
   
@@ -273,21 +267,21 @@ export default function DashboardPage() {
       </Dialog>
 
       {!hasInitialSetup && !isSleepModeActive && (
-        <Card className="border-accent bg-muted shadow-lg">
+        <Card className="border-primary/30 bg-card shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center text-xl text-accent-foreground">
-              <Info className="h-6 w-6 mr-3 text-accent" /> Welcome to PowerPing!
+            <CardTitle className="flex items-center text-xl text-card-foreground">
+              <Info className="h-6 w-6 mr-3 text-primary" /> Welcome to PowerPing!
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-base text-muted-foreground">
               To get started, please configure your home and add your appliances.
             </p>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <Button onClick={() => setIsHomeConfigDialogOpen(true)} variant="default" size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <div className="mt-6 flex flex-col sm:flex-row gap-4">
+              <Button onClick={() => setIsHomeConfigDialogOpen(true)} variant="default" size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 flex-1 sm:flex-none">
                 <Home className="mr-2 h-5 w-5" /> Configure Home
               </Button>
-              <Button onClick={openAddApplianceForm} variant="default" size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button onClick={openAddApplianceForm} variant="outline" size="lg" className="border-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground/90 flex-1 sm:flex-none">
                 <PlusCircle className="mr-2 h-5 w-5" /> Add First Appliance
               </Button>
             </div>
@@ -501,4 +495,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

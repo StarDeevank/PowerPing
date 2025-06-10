@@ -4,7 +4,7 @@ import type { SVGProps } from 'react';
 const PowerPingLogo = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 60 60" // Square viewBox for the new design
+    viewBox="0 0 60 60" // Square viewBox
     fill="none"
     {...props}
   >
@@ -15,17 +15,17 @@ const PowerPingLogo = (props: SVGProps<SVGSVGElement>) => (
         <stop offset="100%" style={{ stopColor: '#A0A0A0' }} />
       </linearGradient>
     </defs>
-    {/* Open Circle Path */}
+    {/* Open Circle Path - unchanged */}
     <path
-      d="M 49.05 41 A 22 22 0 1 0 49.05 19" // Arc starting from (49.05, 41) sweeping counter-clockwise to (49.05, 19)
+      d="M 49.05 41 A 22 22 0 1 0 49.05 19"
       stroke="hsl(var(--accent))"
       strokeWidth="4"
       fill="none"
       strokeLinecap="round"
     />
-    {/* Lightning Bolt Path */}
+    {/* Simplified Lightning Bolt Path for robustness */}
     <path
-      d="M30,8 L38,28 L30,28 L34,38 L22,52 L28,32 L22,32 Z"
+      d="M33 18 L27 32 L34 32 L28 45 L37 28 L30 28 Z" // Adjusted for visual balance
       fill="url(#powerPingLightningGradient)"
     />
   </svg>
