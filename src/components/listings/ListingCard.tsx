@@ -1,5 +1,7 @@
 
 "use client";
+// This component is not used in the WattWatcher AI application.
+// It was part of the previous Airbnb-style UI.
 
 import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +11,7 @@ import { Heart, MapPin, Star } from 'lucide-react';
 export interface Listing {
   id: string;
   imageUrl: string;
-  imageHint?: string; // For data-ai-hint
+  imageHint?: string; 
   title: string;
   location: string;
   rating: number;
@@ -57,7 +59,6 @@ export default function ListingCard({ listing }: ListingCardProps) {
           )}
         </div>
       </CardContent>
-      {/* CardFooter can be used for actions if needed, e.g. a "View Details" button */}
     </Card>
   );
 }

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import BottomNavigationBar from '@/components/layout/BottomNavigationBar'; // New import
+import SiteHeader from '@/components/site-header'; // WattWatcher specific header
 
 export const metadata: Metadata = {
-  title: 'StayFinder AI', // Updated app name
-  description: 'Find your perfect stay with AI-powered insights.', // Updated description
+  title: 'WattWatcher AI', 
+  description: 'Monitor and optimize your energy consumption with AI-powered insights.', 
 };
 
 export default function RootLayout({
@@ -14,18 +14,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className=""> {/* Removed default dark class, new theme is light */}
+    <html lang="en" className="dark"> {/* Apply dark class globally */}
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased min-h-screen flex flex-col">
-        {/* SiteHeader removed for mobile-first feel */}
-        <main className="flex-grow pb-16 md:pb-0"> {/* Add padding-bottom for bottom nav on mobile */}
+      <body className="font-body antialiased min-h-screen flex flex-col bg-background">
+        <SiteHeader /> {/* Using a dedicated header for WattWatcher */}
+        <main className="flex-grow container mx-auto p-4 md:p-6"> 
           {children}
         </main>
-        <BottomNavigationBar /> {/* Added BottomNavigationBar */}
         <Toaster />
       </body>
     </html>

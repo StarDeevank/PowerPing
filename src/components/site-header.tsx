@@ -1,11 +1,10 @@
 
-// This component is currently not used in the new mobile-first layout.
-// It's kept here in case parts of its functionality (like dialog triggers)
-// are needed elsewhere in the new UI structure (e.g., in a profile menu).
+"use client"; // Ensure this component is a client component
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Settings, Zap, PlusCircle, SlidersHorizontal, HomeIcon } from 'lucide-react';
+import { HomeIcon, SlidersHorizontal, PlusCircle, Zap } from 'lucide-react'; // Adjusted icons
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'; // To trigger forms
 
 interface SiteHeaderProps {
   onOpenHomeConfig?: () => void;
@@ -13,15 +12,23 @@ interface SiteHeaderProps {
   onOpenAddAppliance?: () => void;
 }
 
+// Note: The onOpen* props will be passed from the page to control dialog visibility.
+// If not passed, the buttons won't trigger dialogs directly from here.
+// The page itself will manage Dialog open state and pass DialogTrigger as children to these buttons.
+
 const SiteHeader: React.FC<SiteHeaderProps> = ({ onOpenHomeConfig, onOpenUsageSettings, onOpenAddAppliance }) => {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center space-x-2">
-          <Zap className="h-8 w-8 text-primary" /> {/* This Zap icon might need changing to a new logo */}
-          <span className="font-bold text-xl font-headline">StayFinder AI</span> {/* Updated App Name */}
+          <Zap className="h-8 w-8 text-primary" />
+          <span className="font-bold text-xl font-headline text-foreground">WattWatcher AI</span>
         </Link>
         <div className="flex items-center space-x-2">
+          {/*
+            The actual DialogTrigger and DialogContent will be managed in page.tsx
+            These buttons act as visual triggers, their onClick can be used by the parent page.
+          */}
           {onOpenHomeConfig && (
             <Button variant="outline" size="sm" onClick={onOpenHomeConfig} aria-label="Configure Home">
               <HomeIcon className="mr-2 h-4 w-4" />

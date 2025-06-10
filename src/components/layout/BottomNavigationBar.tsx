@@ -1,15 +1,18 @@
 
 "use client";
+// This component is no longer used in WattWatcher AI layout.
+// Kept for reference or if needed in a different context later.
+// To re-enable, import and use it in src/app/layout.tsx
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Briefcase, MessageSquareText, UserCircle2, LineChart } from 'lucide-react'; // Added LineChart
+import { Home, Search, Briefcase, MessageSquareText, UserCircle2, LineChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/search', label: 'Search', icon: Search },
-  { href: '/graph', label: 'Graph', icon: LineChart }, // Added Graph item
+  { href: '/graph', label: 'Graph', icon: LineChart },
   { href: '/trips', label: 'Trips', icon: Briefcase },
   { href: '/inbox', label: 'Inbox', icon: MessageSquareText },
   { href: '/profile', label: 'Profile', icon: UserCircle2 },

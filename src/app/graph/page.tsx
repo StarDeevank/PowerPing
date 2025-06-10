@@ -1,3 +1,6 @@
+// This page is no longer part of the WattWatcher AI application.
+// It was related to the previous Airbnb-style UI.
+// To re-enable, ensure it's linked appropriately and fits the app's context.
 
 import RealTimeGraph from '@/components/graphs/RealTimeGraph';
 import SectionTitle from '@/components/common/SectionTitle';
@@ -14,7 +17,8 @@ export default function GraphPage() {
       
       <main className="flex flex-col items-center">
         <div className="w-full max-w-3xl">
-          <RealTimeGraph />
+          {/* <RealTimeGraph /> */}
+          <p className="text-center text-muted-foreground p-8">Graph component placeholder. This feature is currently inactive.</p>
         </div>
       </main>
     </div>

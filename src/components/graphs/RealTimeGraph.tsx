@@ -1,21 +1,28 @@
 
 "use client";
+// This component is currently not actively used in the WattWatcher AI application.
+// It was part of the previous Airbnb-style UI.
+// If needed for WattWatcher (e.g., for an analytics dashboard), it can be adapted.
 
 import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import type { RealTimeDataPoint } from '@/types';
 import { Pause, Play } from 'lucide-react';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 
-const MAX_DATA_POINTS = 30; // Number of data points to show on the chart at once
+interface RealTimeDataPoint { // Copied from types/index.ts for standalone reference
+  time: number; 
+  value: number;
+}
+
+const MAX_DATA_POINTS = 30; 
 
 const chartConfig = {
   value: {
     label: "Value",
-    color: "hsl(var(--primary))",
+    color: "hsl(var(--primary))", // Will use WattWatcher primary color
   },
 } satisfies ChartConfig;
 
@@ -33,7 +40,7 @@ export default function RealTimeGraph() {
       setData(prevData => {
         const newDataPoint: RealTimeDataPoint = {
           time: dataCounterRef.current++,
-          value: Math.floor(Math.random() * 100) + 50, // Simulate data between 50-150
+          value: Math.floor(Math.random() * 100) + 50, 
         };
         const updatedData = [...prevData, newDataPoint];
         if (updatedData.length > MAX_DATA_POINTS) {
@@ -41,7 +48,7 @@ export default function RealTimeGraph() {
         }
         return updatedData;
       });
-    }, 1000); // Update every second
+    }, 1000); 
 
     return () => clearInterval(interval);
   }, [isPaused]);
@@ -51,10 +58,10 @@ export default function RealTimeGraph() {
   };
 
   return (
-    <Card className="shadow-lg w-full">
+    <Card className="shadow-lg w-full bg-card text-card-foreground">
       <CardHeader>
         <CardTitle>Real-Time Data Stream</CardTitle>
-        <CardDescription>Live updating graph showcasing simulated data.</CardDescription>
+        <CardDescription className="text-muted-foreground">Live updating graph showcasing simulated data.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-4">
@@ -70,7 +77,7 @@ export default function RealTimeGraph() {
               margin={{
                 top: 5,
                 right: 20,
-                left: -10, // Adjust to make Y-axis labels more visible
+                left: -10, 
                 bottom: 5,
               }}
             >
@@ -90,8 +97,11 @@ export default function RealTimeGraph() {
               <Tooltip
                 cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
                 content={<ChartTooltipContent indicator="line" />}
+                wrapperStyle={{ backgroundColor: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}}
+                labelStyle={{color: 'hsl(var(--popover-foreground))'}}
+                itemStyle={{color: 'hsl(var(--popover-foreground))'}}
               />
-              <Legend verticalAlign="top" wrapperStyle={{fontSize: "12px"}} />
+              <Legend verticalAlign="top" wrapperStyle={{fontSize: "12px", color: 'hsl(var(--foreground))'}} />
               <Line
                 type="monotone"
                 dataKey="value"
@@ -99,7 +109,7 @@ export default function RealTimeGraph() {
                 strokeWidth={2}
                 dot={false}
                 isAnimationActive={true}
-                animationDuration={300} // Smooth transition for new points
+                animationDuration={300} 
               />
             </LineChart>
           </ChartContainer>
