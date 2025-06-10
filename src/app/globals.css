@@ -8,88 +8,90 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 13.3%; /* #222222 Soft dark gray */
-    --foreground: 0 0% 98%; /* Near white for text on dark background */
+    --background: 30 56% 95%; /* beige-ish white, e.g., #F7F2ED */
+    --foreground: 0 0% 20%; /* dark gray, e.g., #333333 */
 
-    --card: 0 0% 16%; /* Slightly lighter than background for cards, e.g., #292929 */
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 0 0% 20%;
 
-    --popover: 0 0% 10%; /* Darker popover background */
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%; /* white for popovers */
+    --popover-foreground: 0 0% 20%;
 
-    --primary: 210 100% 50%; /* #007BFF Electric blue */
-    --primary-foreground: 0 0% 100%; /* White text on primary */
+    --primary: 320 60% 50%; /* magenta, e.g., #D946AC */
+    --primary-foreground: 0 0% 100%; /* white text on primary */
 
-    --secondary: 0 0% 25%; /* A medium gray for secondary elements */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 30 20% 90%; /* light beige for secondary elements */
+    --secondary-foreground: 0 0% 25%; /* dark gray for text on secondary */
 
-    --muted: 0 0% 25%;
-    --muted-foreground: 0 0% 65%; /* Lighter gray for muted text */
+    --muted: 30 20% 88%; /* slightly darker beige for muted */
+    --muted-foreground: 0 0% 45%; /* medium gray for muted text */
 
-    --accent: 75 100% 50%; /* #BFFF00 Lime green */
-    --accent-foreground: 0 0% 10%; /* Dark text for high contrast on lime green */
+    --accent: 30 60% 80%; /* a soft accent, maybe a peachier beige */
+    --accent-foreground: 0 0% 15%; /* dark text for high contrast on accent */
 
     --destructive: 0 70% 50%; /* A suitable red for destructive actions */
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 28%; /* Border color, e.g., #474747 */
-    --input: 0 0% 20%; /* Input background */
-    --ring: 210 100% 50%; /* Electric blue for focus rings */
+    --border: 30 20% 85%; /* light beige/gray for borders, e.g., #E8E0D9 */
+    --input: 0 0% 98%; /* very light gray/off-white for inputs, e.g., #FAFAFA */
+    --ring: 320 60% 50%; /* magenta for focus rings */
 
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* Increased radius for softer corners */
 
-    --chart-1: 210 100% 50%;
-    --chart-2: 75 100% 50%;
-    --chart-3: 30 80% 55%;
+    --chart-1: 320 60% 50%;
+    --chart-2: 25 80% 60%;
+    --chart-3: 180 50% 50%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-5: 40 75% 55%;
 
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95.9%;
-    --sidebar-primary: 210 100% 50%;
+    /* Sidebar colors adapted for the new theme, though sidebar component might be less relevant for mobile-first UI */
+    --sidebar-background: 30 30% 92%; /* Lighter beige for sidebar */
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 320 60% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 75 100% 50%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 15.9%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-accent: 30 60% 80%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 30 20% 80%;
+    --sidebar-ring: 320 60% 50%;
   }
 
   .dark {
-    /* Keep .dark consistent with :root for this primarily dark-themed app */
-    --background: 0 0% 13.3%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 16%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 210 100% 50%;
+    /* For consistency, map dark theme to the new light neutral theme as requested.
+       If a true dark mode is needed later, these can be adjusted. */
+    --background: 30 56% 95%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 320 60% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 25%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 25%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 75 100% 50%;
-    --accent-foreground: 0 0% 10%;
+    --secondary: 30 20% 90%;
+    --secondary-foreground: 0 0% 25%;
+    --muted: 30 20% 88%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 30 60% 80%;
+    --accent-foreground: 0 0% 15%;
     --destructive: 0 70% 50%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 28%;
-    --input: 0 0% 20%;
-    --ring: 210 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 20% 85%;
+    --input: 0 0% 98%;
+    --ring: 320 60% 50%;
 
-    --chart-1: 210 100% 50%;
-    --chart-2: 75 100% 50%;
-    --chart-3: 30 80% 55%;
+    --chart-1: 320 60% 50%;
+    --chart-2: 25 80% 60%;
+    --chart-3: 180 50% 50%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-5: 40 75% 55%;
 
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95.9%;
-    --sidebar-primary: 210 100% 50%;
+    --sidebar-background: 30 30% 92%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 320 60% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 75 100% 50%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 15.9%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-accent: 30 60% 80%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 30 20% 80%;
+    --sidebar-ring: 320 60% 50%;
   }
 }
 

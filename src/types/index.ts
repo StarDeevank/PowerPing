@@ -1,3 +1,5 @@
+
+// Existing WattWatcher Types - these might be removed or adapted later
 export interface Appliance {
   id: string;
   deviceName: string;
@@ -59,7 +61,7 @@ export interface EnergyPredictionData {
   estimatedDailyCost: number;
   estimatedMonthlyCost: number;
   isWithinGoal: boolean;
-  currency: string; // Ensure currency is part of the output structure if needed for display
+  currency: string;
 }
 
 // Input for generateReminderRulesFlow
@@ -70,7 +72,6 @@ export interface IntelligentRemindersGenAIInput {
     deviceName: string;
     room: string;
     estimatedDailyUsage: number;
-    // status is not in the AI input for reminders, but good to have in app state
   }>;
   monthlyElectricityBillGoal: number;
 }
@@ -85,7 +86,7 @@ export interface IntelligentRemindersGenAIOutput {
 }
 
 
-// Types for UI display
+// Types for UI display (WattWatcher specific)
 export interface DisplayPersonalizedTip {
   id: string;
   text: string;
@@ -96,3 +97,22 @@ export interface DisplayIntelligentReminder {
   applianceName: string;
   rule: string;
 }
+
+
+// New types for Airbnb-style UI
+export interface Listing {
+  id: string;
+  imageUrl: string;
+  imageHint?: string;
+  title: string;
+  location: string;
+  rating: number;
+  pricePerNight: number;
+  currency: string;
+}
+
+// Add other types as needed for Search, Trips, Inbox, Profile pages
+// For example:
+// export interface Trip { ... }
+// export interface Message { ... }
+// export interface UserProfile { ... }
