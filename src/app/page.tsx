@@ -16,6 +16,7 @@ import RealTimeFeedbackItem from '@/components/dashboard/RealTimeFeedbackItem';
 import SectionTitle from '@/components/common/SectionTitle';
 import SiteHeader from '@/components/site-header';
 import EnergyConsumptionChart from '@/components/dashboard/EnergyConsumptionChart';
+import LiveWattageChart from '@/components/dashboard/LiveWattageChart'; // Import the new chart
 import type {
   Appliance, HomeConfiguration, UsageSettings, HomeSize,
   EnergyPredictionData, DisplayIntelligentReminder, DisplayPersonalizedTip
@@ -25,13 +26,15 @@ import { generatePersonalizedTips } from '@/ai/flows/personalized-tips';
 import { generateReminderRules } from '@/ai/flows/intelligent-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun } from 'lucide-react'; // Added icons for tabs
+import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
 
 const initialHomeConfig: HomeConfiguration = { homeSize: '', numberOfRooms: 1 };
 const initialUsageSettings: UsageSettings = { monthlyElectricityBillGoal: 1000, currency: '₹' };
+
+const MAX_LIVE_GRAPH_POINTS = 30; // Number of data points to show in the live graph
 
 export default function DashboardPage() {
   const { toast } = useToast();
@@ -51,10 +54,12 @@ export default function DashboardPage() {
   const [editingAppliance, setEditingAppliance] = useState<Appliance | undefined>(undefined);
   const [isSleepModeActive, setIsSleepModeActive] = useState(false);
   
-  // State for mock real-time data
   const [currentWattage, setCurrentWattage] = useState(0);
   const [estimatedBillToday, setEstimatedBillToday] = useState(0);
   const [estimatedBillMonth, setEstimatedBillMonth] = useState(0);
+  const [liveGraphData, setLiveGraphData] = useState<{ time: number; wattage: number }[]>([]);
+  const [timeCounter, setTimeCounter] = useState(0);
+
 
   useEffect(() => {
     const storedHomeConfig = localStorage.getItem('wattwatcher_homeConfig');
@@ -123,32 +128,40 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchAIData(); }, [fetchAIData]);
 
-  // Mock real-time data updates
   useEffect(() => {
     if (isSleepModeActive) {
-        setCurrentWattage(0); // Or a very low baseline
-        // Potentially pause bill updates or show them as static
+        setCurrentWattage(0); 
+        // Optionally clear graph data or show a "paused" state for the graph
+        // setLiveGraphData([]); 
         return;
     }
     const interval = setInterval(() => {
       let totalWattage = 0;
       appliances.forEach(app => {
         if (app.status) {
-          // Simplified wattage based on usage hours (very rough estimate)
           totalWattage += app.estimatedDailyUsage * 50 + Math.random() * 50; 
         }
       });
-      setCurrentWattage(parseFloat(totalWattage.toFixed(0)));
+      const newCurrentWattage = parseFloat(totalWattage.toFixed(0));
+      setCurrentWattage(newCurrentWattage);
       
-      // Mock bill calculation (highly simplified)
+      setTimeCounter(prev => prev + 1);
+      setLiveGraphData(prevData => {
+        const newData = [...prevData, { time: timeCounter, wattage: newCurrentWattage }];
+        if (newData.length > MAX_LIVE_GRAPH_POINTS) {
+          return newData.slice(newData.length - MAX_LIVE_GRAPH_POINTS);
+        }
+        return newData;
+      });
+      
       const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15;
-      const dailyKWh = (totalWattage * 24) / 1000; // Assuming current wattage persists
+      const dailyKWh = (newCurrentWattage * 24) / 1000; 
       setEstimatedBillToday(parseFloat((dailyKWh * costPerKWh).toFixed(2)));
       setEstimatedBillMonth(parseFloat((dailyKWh * 30 * costPerKWh).toFixed(2)));
 
-    }, 2000); // Update every 2 seconds
+    }, 2000);
     return () => clearInterval(interval);
-  }, [appliances, usageSettings, isSleepModeActive]);
+  }, [appliances, usageSettings, isSleepModeActive, timeCounter]);
 
 
   const handleHomeConfigSubmit = (data: HomeConfiguration) => { setHomeConfiguration(data); setIsHomeConfigDialogOpen(false); toast({ title: "Success", description: "Home configuration saved!" }); };
@@ -187,11 +200,14 @@ export default function DashboardPage() {
     const newSleepModeState = !isSleepModeActive;
     setIsSleepModeActive(newSleepModeState);
     if (newSleepModeState) {
-      toast({ title: "Sleep Mode Activated", description: "AI insights paused." });
+      toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats may be limited." });
+      // Clear graph data when sleep mode is activated
+      // setLiveGraphData([]);
+      // setTimeCounter(0);
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal." });
     }
-    fetchAIData();
+    // AI data fetch is handled by its own useEffect dependency on isSleepModeActive
   };
 
   const hasInitialSetup = homeConfiguration.homeSize && appliances.length > 0;
@@ -335,6 +351,8 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground">Projected from current trends</p>
                 </CardContent>
               </Card>
+              {/* Live Wattage Chart */}
+              <LiveWattageChart data={liveGraphData} />
             </div>
           )}
         </TabsContent>
@@ -368,7 +386,6 @@ export default function DashboardPage() {
                 </Button>
               </CardContent>
             </Card>
-            {/* Placeholder for future settings like smart plug connection, AI suggestions toggle */}
              <Card>
               <CardHeader><CardTitle className="text-lg">Advanced (Coming Soon)</CardTitle></CardHeader>
               <CardContent className="space-y-4">
