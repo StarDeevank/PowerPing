@@ -14,9 +14,9 @@ import IntelligentRemindersCard from '@/components/dashboard/IntelligentReminder
 import PersonalizedTipsCard from '@/components/dashboard/PersonalizedTipsCard';
 import RealTimeFeedbackItem from '@/components/dashboard/RealTimeFeedbackItem';
 import SectionTitle from '@/components/common/SectionTitle';
-import SiteHeader from '@/components/site-header';
+// import SiteHeader from '@/components/site-header'; // Removed: SiteHeader is now in layout.tsx and page-specific controls are local
 import EnergyConsumptionChart from '@/components/dashboard/EnergyConsumptionChart';
-import LiveWattageChart from '@/components/dashboard/LiveWattageChart'; // Import the new chart
+import LiveWattageChart from '@/components/dashboard/LiveWattageChart';
 import type {
   Appliance, HomeConfiguration, UsageSettings, HomeSize,
   EnergyPredictionData, DisplayIntelligentReminder, DisplayPersonalizedTip
@@ -34,7 +34,7 @@ import { Switch } from "@/components/ui/switch";
 const initialHomeConfig: HomeConfiguration = { homeSize: '', numberOfRooms: 1 };
 const initialUsageSettings: UsageSettings = { monthlyElectricityBillGoal: 1000, currency: '₹' };
 
-const MAX_LIVE_GRAPH_POINTS = 30; // Number of data points to show in the live graph
+const MAX_LIVE_GRAPH_POINTS = 30;
 
 export default function DashboardPage() {
   const { toast } = useToast();
@@ -131,8 +131,6 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0); 
-        // Optionally clear graph data or show a "paused" state for the graph
-        // setLiveGraphData([]); 
         return;
     }
     const interval = setInterval(() => {
@@ -201,20 +199,24 @@ export default function DashboardPage() {
     setIsSleepModeActive(newSleepModeState);
     if (newSleepModeState) {
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats may be limited." });
-      // Clear graph data when sleep mode is activated
-      // setLiveGraphData([]);
-      // setTimeCounter(0);
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal." });
     }
-    // AI data fetch is handled by its own useEffect dependency on isSleepModeActive
   };
 
   const hasInitialSetup = homeConfiguration.homeSize && appliances.length > 0;
 
   return (
     <div className="space-y-6">
-      <SiteHeader isSleepModeActive={isSleepModeActive} onToggleSleepMode={handleToggleSleepMode} />
+      {/* SiteHeader removed from here, it's now globally in layout.tsx */}
+      
+      {/* Sleep Mode Toggle Button - moved here from SiteHeader for page-specific control */}
+      <div className="flex justify-end items-center pt-2"> {/* Added pt-2 for a bit of space from potential header, and items-center */}
+        <Button variant="outline" size="sm" onClick={handleToggleSleepMode} aria-label={isSleepModeActive ? "Deactivate Sleep Mode" : "Activate Sleep Mode"}>
+          {isSleepModeActive ? <Sun className="h-4 w-4 sm:mr-2" /> : <Moon className="h-4 w-4 sm:mr-2" />}
+          <span className="hidden sm:inline">{isSleepModeActive ? 'Awake Mode' : 'Sleep Mode'}</span>
+        </Button>
+      </div>
 
       <Dialog open={isApplianceFormOpen} onOpenChange={setIsApplianceFormOpen}>
         <DialogContent>
@@ -351,7 +353,6 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground">Projected from current trends</p>
                 </CardContent>
               </Card>
-              {/* Live Wattage Chart */}
               <LiveWattageChart data={liveGraphData} />
             </div>
           )}
@@ -405,3 +406,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

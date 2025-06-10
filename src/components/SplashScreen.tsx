@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import PowerPingLogo from '@/components/icons/WattWatcherLogo';
+import PowerPingLogo from '@/components/icons/PowerPingLogo'; // Updated import
 import { cn } from '@/lib/utils';
 
 interface SplashScreenProps {
