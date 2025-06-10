@@ -28,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 
 const initialHomeConfig: HomeConfiguration = { homeSize: '', numberOfRooms: 1 };
