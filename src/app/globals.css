@@ -8,89 +8,89 @@ body {
 
 @layer base {
   :root {
-    /* Default to dark theme values as per WattWatcher AI style guidelines */
-    --background: 0 0% 13%; /* Soft Dark Gray #222222 */
+    /* New Monochrome Dark Theme based on logo */
+    --background: 0 0% 4%; /* Almost Black */
     --foreground: 0 0% 95%; /* Light Gray/White for text */
 
-    --card: 0 0% 10%; /* Slightly darker than background for cards */
+    --card: 0 0% 8%; /* Slightly lighter than background for cards */
     --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 10%;
+    --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 211 100% 50%; /* Electric Blue #007BFF */
-    --primary-foreground: 0 0% 100%; /* White text on blue */
+    --primary: 0 0% 75%; /* Light Gray for primary elements */
+    --primary-foreground: 0 0% 5%; /* Dark text on light gray */
 
-    --secondary: 210 10% 20%; /* A darker blue/gray for secondary elements */
+    --secondary: 0 0% 20%; /* Darker Gray for secondary elements */
     --secondary-foreground: 0 0% 90%;
 
-    --muted: 210 10% 15%;
+    --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
 
-    --accent: 75 100% 50%; /* Lime Green #BFFF00 */
-    --accent-foreground: 0 0% 5%; /* Dark text for contrast on lime green */
+    --accent: 0 0% 90%; /* Brighter Gray/White for accents */
+    --accent-foreground: 0 0% 5%; /* Dark text for contrast */
 
-    --destructive: 0 70% 50%; /* Red */
+    --destructive: 0 70% 50%; /* Red - kept for destructive actions */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%; /* Slightly lighter than background for borders */
-    --input: 0 0% 16%; /* Slightly lighter for input backgrounds */
-    --ring: 211 100% 50%; /* Electric Blue for focus rings */
+    --border: 0 0% 20%;
+    --input: 0 0% 12%; /* Slightly lighter for input backgrounds */
+    --ring: 0 0% 80%; /* Light Gray for focus rings */
 
     --radius: 0.75rem;
 
-    --chart-1: 211 100% 50%; /* Electric Blue */
-    --chart-2: 75 100% 50%;  /* Lime Green */
-    --chart-3: 180 50% 50%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 40 75% 55%;
+    --chart-1: 0 0% 75%; /* Primary color */
+    --chart-2: 0 0% 90%;  /* Accent color */
+    --chart-3: 0 0% 60%;
+    --chart-4: 0 0% 50%;
+    --chart-5: 0 0% 40%;
 
-    /* Sidebar colors adapted for the dark theme */
-    --sidebar-background: 0 0% 10%;
+    /* Sidebar colors adapted for the new dark theme */
+    --sidebar-background: 0 0% 7%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 211 100% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 75 100% 50%;
+    --sidebar-primary: 0 0% 75%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 90%;
     --sidebar-accent-foreground: 0 0% 5%;
     --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 211 100% 50%;
+    --sidebar-ring: 0 0% 80%;
   }
 
   .dark {
-    --background: 0 0% 13%;
+    --background: 0 0% 4%;
     --foreground: 0 0% 95%;
-    --card: 0 0% 10%;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 95%;
-    --popover: 0 0% 10%;
+    --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
-    --primary: 211 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 10% 20%;
+    --primary: 0 0% 75%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 20%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 210 10% 15%;
+    --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
-    --accent: 75 100% 50%;
+    --accent: 0 0% 90%;
     --accent-foreground: 0 0% 5%;
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 20%;
-    --input: 0 0% 16%;
-    --ring: 211 100% 50%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 80%;
 
-    --chart-1: 211 100% 50%;
-    --chart-2: 75 100% 50%;
-    --chart-3: 180 50% 50%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 40 75% 55%;
+    --chart-1: 0 0% 75%;
+    --chart-2: 0 0% 90%;
+    --chart-3: 0 0% 60%;
+    --chart-4: 0 0% 50%;
+    --chart-5: 0 0% 40%;
 
-    --sidebar-background: 0 0% 10%;
+    --sidebar-background: 0 0% 7%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 211 100% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 75 100% 50%;
+    --sidebar-primary: 0 0% 75%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 90%;
     --sidebar-accent-foreground: 0 0% 5%;
     --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 211 100% 50%;
+    --sidebar-ring: 0 0% 80%;
   }
 }
 
