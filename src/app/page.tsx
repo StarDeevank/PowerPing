@@ -35,6 +35,7 @@ const initialHomeConfig: HomeConfiguration = { homeSize: '', numberOfRooms: 1 };
 const initialUsageSettings: UsageSettings = { monthlyElectricityBillGoal: 1000, currency: '₹' };
 
 const MAX_LIVE_GRAPH_POINTS = 30;
+const REALTIME_UPDATE_INTERVAL = 1000; // ms
 
 export default function DashboardPage() {
   const { toast } = useToast();
@@ -166,8 +167,8 @@ export default function DashboardPage() {
       
       // Using a simplified average cost per kWh. Replace with a more accurate local value if needed.
       const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15; // INR 7/kWh, USD 0.15/kWh
-      // Calculate KWh based on current wattage being constant for an hour, then scale for the 2-second interval
-      const currentKWhForInterval = (newCurrentWattage / 1000) * (2 / 3600); // 2 seconds / 3600 seconds in an hour
+      // Calculate KWh based on current wattage being constant for an hour, then scale for the interval
+      const currentKWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / 1000 / 3600); 
       
       setEstimatedBillToday(prevBill => parseFloat((prevBill + (currentKWhForInterval * costPerKWh)).toFixed(2)));
       // Simple projection for the month. Could be more sophisticated.
@@ -177,8 +178,7 @@ export default function DashboardPage() {
           return parseFloat((hourlyCost * 24 * 30).toFixed(2));
       });
 
-
-    }, 2000); // Update every 2 seconds
+    }, REALTIME_UPDATE_INTERVAL); // Update interval
     return () => clearInterval(interval);
   }, [appliances, usageSettings, isSleepModeActive, timeCounter]);
 
@@ -273,22 +273,22 @@ export default function DashboardPage() {
       </Dialog>
 
       {!hasInitialSetup && !isSleepModeActive && (
-        <Card className="border-primary/50 bg-primary/10">
+        <Card className="border-accent bg-muted shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <Info className="h-5 w-5 mr-2 text-primary" /> Welcome to PowerPing!
+            <CardTitle className="flex items-center text-xl text-accent-foreground">
+              <Info className="h-6 w-6 mr-3 text-accent" /> Welcome to PowerPing!
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-primary-foreground/80">
-              To get started, please configure your home details and add your appliances.
+            <p className="text-base text-muted-foreground">
+              To get started, please configure your home and add your appliances.
             </p>
-            <div className="mt-4 flex flex-col sm:flex-row gap-2">
-              <Button onClick={() => setIsHomeConfigDialogOpen(true)} variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Home className="mr-2 h-4 w-4" /> Configure Home
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <Button onClick={() => setIsHomeConfigDialogOpen(true)} variant="default" size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Home className="mr-2 h-5 w-5" /> Configure Home
               </Button>
-              <Button onClick={openAddApplianceForm} variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add First Appliance
+              <Button onClick={openAddApplianceForm} variant="default" size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <PlusCircle className="mr-2 h-5 w-5" /> Add First Appliance
               </Button>
             </div>
           </CardContent>
@@ -308,12 +308,27 @@ export default function DashboardPage() {
       )}
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 mb-6">
-          <TabsTrigger value="dashboard"><BarChart2 className="mr-1 h-4 w-4 md:mr-2"/><span className="hidden sm:inline">Dashboard</span></TabsTrigger>
-          <TabsTrigger value="appliances"><Zap className="mr-1 h-4 w-4 md:mr-2"/><span className="hidden sm:inline">Appliances</span></TabsTrigger>
-          <TabsTrigger value="livestats"><AlertCircle className="mr-1 h-4 w-4 md:mr-2"/><span className="hidden sm:inline">Live Stats</span></TabsTrigger>
-          <TabsTrigger value="insights" className="hidden md:inline-flex items-center"><Lightbulb className="mr-2 h-4 w-4"/>Insights</TabsTrigger>
-          <TabsTrigger value="settings" className="hidden md:inline-flex items-center"><Settings className="mr-2 h-4 w-4"/>Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsTrigger value="dashboard">
+            <BarChart2 className="h-4 w-4 sm:mr-2"/>
+            <span className="hidden sm:inline">Dashboard</span>
+          </TabsTrigger>
+          <TabsTrigger value="appliances">
+            <Zap className="h-4 w-4 sm:mr-2"/>
+            <span className="hidden sm:inline">Appliances</span>
+          </TabsTrigger>
+          <TabsTrigger value="livestats">
+            <AlertCircle className="h-4 w-4 sm:mr-2"/>
+            <span className="hidden sm:inline">Live Stats</span>
+          </TabsTrigger>
+          <TabsTrigger value="insights">
+            <Lightbulb className="h-4 w-4 sm:mr-2"/>
+            <span className="hidden sm:inline">Insights</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings">
+            <Settings className="h-4 w-4 sm:mr-2"/>
+            <span className="hidden sm:inline">Settings</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
