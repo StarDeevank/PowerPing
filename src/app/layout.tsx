@@ -1,11 +1,13 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import SiteHeader from '@/components/site-header'; // WattWatcher specific header
+import SiteHeader from '@/components/site-header';
+import AppInitializer from '@/components/AppInitializer'; // Import new component
 
 export const metadata: Metadata = {
-  title: 'WattWatcher AI', 
-  description: 'Monitor and optimize your energy consumption with AI-powered insights.', 
+  title: 'WattWatcher AI',
+  description: 'Monitor and optimize your energy consumption with AI-powered insights.',
 };
 
 export default function RootLayout({
@@ -16,16 +18,19 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        {/* Metadata will be injected by Next.js from the export above */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col bg-background">
-        <SiteHeader /> {/* Using a dedicated header for WattWatcher */}
-        <main className="flex-grow container mx-auto p-4 md:p-6"> 
-          {children}
-        </main>
-        <Toaster />
+        <AppInitializer>
+          <SiteHeader /> {/* This SiteHeader instance won't have sleep mode toggle from page.tsx */}
+          <main className="flex-grow container mx-auto p-4 md:p-6">
+            {children}
+          </main>
+          <Toaster />
+        </AppInitializer>
       </body>
     </html>
   );
