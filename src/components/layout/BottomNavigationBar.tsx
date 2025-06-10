@@ -3,12 +3,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Briefcase, MessageSquareText, UserCircle2 } from 'lucide-react';
+import { Home, Search, Briefcase, MessageSquareText, UserCircle2, LineChart } from 'lucide-react'; // Added LineChart
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/search', label: 'Search', icon: Search },
+  { href: '/graph', label: 'Graph', icon: LineChart }, // Added Graph item
   { href: '/trips', label: 'Trips', icon: Briefcase },
   { href: '/inbox', label: 'Inbox', icon: MessageSquareText },
   { href: '/profile', label: 'Profile', icon: UserCircle2 },

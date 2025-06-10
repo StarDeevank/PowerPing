@@ -111,6 +111,12 @@ export interface Listing {
   currency: string;
 }
 
+// Type for real-time graph data points
+export interface RealTimeDataPoint {
+  time: number; // Or a timestamp/string if preferred
+  value: number;
+}
+
 // Add other types as needed for Search, Trips, Inbox, Profile pages
 // For example:
 // export interface Trip { ... }
