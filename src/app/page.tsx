@@ -266,7 +266,7 @@ export default function DashboardPage() {
 
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
-  }, [appliances, usageSettings.currency, isSleepModeActive]); // Removed timeCounter from dependencies
+  }, [appliances, usageSettings.currency, isSleepModeActive]); 
 
 
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
@@ -324,7 +324,7 @@ export default function DashboardPage() {
     const currentYearValue = getYear(new Date());
 
     Object.entries(dailyRecords).forEach(([dateKey, record]) => {
-      const recordDate = parseISO(dateKey); // Ensure dateKey is parsed correctly
+      const recordDate = parseISO(dateKey); 
       if (getMonth(recordDate) === currentMonthValue && getYear(recordDate) === currentYearValue) {
         total += record.totalCost;
       }
@@ -461,7 +461,11 @@ export default function DashboardPage() {
                     </Card>
                  ) : (
                     <>
-                        <EnergyConsumptionChart dailyRecords={dailyRecords} endDate={new Date()} />
+                        <EnergyConsumptionChart 
+                          dailyRecords={dailyRecords} 
+                          endDate={new Date()} 
+                          currentDayKWh={currentDayKWh} 
+                        />
                         <div>
                         <SectionTitle>Real-Time Feedback</SectionTitle>
                         {!isSleepModeActive ? (
@@ -632,5 +636,4 @@ export default function DashboardPage() {
     </div>
   );
 }
-
     

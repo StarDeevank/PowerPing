@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { DailyRecords } from '@/types';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays, isSameDay } from 'date-fns';
 
 const chartConfig = {
   consumption: {
@@ -17,25 +17,34 @@ const chartConfig = {
 
 interface EnergyConsumptionChartProps {
   dailyRecords: DailyRecords;
-  endDate: Date; // Renamed from selectedDate, always represents 'today' or the end of the period
+  endDate: Date; // Represents 'today'
+  currentDayKWh: number; // Live kWh for today
   daysToShow?: number;
 }
 
-const EnergyConsumptionChart: React.FC<EnergyConsumptionChartProps> = ({ dailyRecords, endDate, daysToShow = 7 }) => {
+const EnergyConsumptionChart: React.FC<EnergyConsumptionChartProps> = ({ dailyRecords, endDate, currentDayKWh, daysToShow = 7 }) => {
   const chartData = React.useMemo(() => {
     const data = [];
     for (let i = 0; i < daysToShow; i++) {
       const dateToFetch = subDays(endDate, i);
       const dateKey = format(dateToFetch, 'yyyy-MM-dd');
-      const record = dailyRecords[dateKey];
+      let consumptionValue = 0;
+
+      if (isSameDay(dateToFetch, endDate)) { // If it's today
+        consumptionValue = currentDayKWh;
+      } else {
+        const record = dailyRecords[dateKey];
+        consumptionValue = record ? record.totalKWh : 0;
+      }
+      
       data.push({
         day: format(dateToFetch, 'MMM d'), 
         shortDay: format(dateToFetch, 'EEE'), 
-        consumption: record ? record.totalKWh : 0, 
+        consumption: consumptionValue, 
       });
     }
     return data.reverse(); 
-  }, [dailyRecords, endDate, daysToShow]);
+  }, [dailyRecords, endDate, currentDayKWh, daysToShow]);
 
   const noDataAvailable = chartData.every(d => d.consumption === 0);
 
@@ -44,13 +53,13 @@ const EnergyConsumptionChart: React.FC<EnergyConsumptionChartProps> = ({ dailyRe
       <CardHeader>
         <CardTitle>Energy Consumption History</CardTitle>
         <CardDescription>
-          Your daily energy usage for the last {daysToShow} recorded days (ending today).
+          Daily energy usage for the past {daysToShow -1} days and today (live).
         </CardDescription>
       </CardHeader>
       <CardContent>
         {noDataAvailable ? (
            <div className="flex items-center justify-center h-[300px]">
-             <p className="text-muted-foreground">No consumption data recorded for this period.</p>
+             <p className="text-muted-foreground">No consumption data recorded for this period, or today's usage is zero.</p>
            </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-[300px] w-full">
