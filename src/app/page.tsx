@@ -390,12 +390,12 @@ export default function DashboardPage() {
               disabled={isSleepModeActive || isAIDataLoading || !hasInitialSetup}
               aria-label="Refresh AI Data"
             >
-              <RefreshCw className={`h-4 w-4 ${isAIDataLoading ? 'animate-spin' : ''} sm:mr-2`} />
-              <span className="hidden sm:inline">Refresh AI</span>
+              <RefreshCw className={`h-4 w-4 ${isAIDataLoading ? 'animate-spin' : ''} md:mr-2`} />
+              <span className="hidden md:inline">Refresh AI</span>
             </Button>
           <Button variant="outline" size="sm" onClick={handleToggleSleepMode} aria-label={isSleepModeActive ? "Deactivate Sleep Mode" : "Activate Sleep Mode"}>
-            {isSleepModeActive ? <Sun className="h-4 w-4 sm:mr-2" /> : <Moon className="h-4 w-4 sm:mr-2" />}
-            <span className="hidden sm:inline">{isSleepModeActive ? 'Awake Mode' : 'Sleep Mode'}</span>
+            {isSleepModeActive ? <Sun className="h-4 w-4 md:mr-2" /> : <Moon className="h-4 w-4 md:mr-2" />}
+            <span className="hidden md:inline">{isSleepModeActive ? 'Awake Mode' : 'Sleep Mode'}</span>
           </Button>
         </div>
       </div>
@@ -428,31 +428,31 @@ export default function DashboardPage() {
       )}
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6">
-          <TabsTrigger value="dashboard" className="flex-1 sm:flex-initial">
-            <BarChart2 className="h-4 w-4 sm:mr-2"/>
-            <span className="hidden sm:inline">Dashboard</span>
-            <span className="sm:hidden">Dash</span>
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 mb-6">
+          <TabsTrigger value="dashboard" className="flex-1 md:flex-initial">
+            <BarChart2 className="h-4 w-4 md:mr-2"/>
+            <span className="hidden md:inline">Dashboard</span>
+            <span className="md:hidden">Dash</span>
           </TabsTrigger>
-          <TabsTrigger value="appliances" className="flex-1 sm:flex-initial">
-            <Zap className="h-4 w-4 sm:mr-2"/>
-            <span className="hidden sm:inline">Appliances</span>
-            <span className="sm:hidden">Devices</span>
+          <TabsTrigger value="appliances" className="flex-1 md:flex-initial">
+            <Zap className="h-4 w-4 md:mr-2"/>
+            <span className="hidden md:inline">Appliances</span>
+            <span className="md:hidden">Devices</span>
           </TabsTrigger>
-          <TabsTrigger value="livestats" className="flex-1 sm:flex-initial">
-            <AlertCircle className="h-4 w-4 sm:mr-2"/>
-            <span className="hidden sm:inline">Live Stats</span>
-            <span className="sm:hidden">Live</span>
+          <TabsTrigger value="livestats" className="flex-1 md:flex-initial">
+            <AlertCircle className="h-4 w-4 md:mr-2"/>
+            <span className="hidden md:inline">Live Stats</span>
+            <span className="md:hidden">Live</span>
           </TabsTrigger>
-          <TabsTrigger value="insights" className="flex-1 sm:flex-initial">
-            <Lightbulb className="h-4 w-4 sm:mr-2"/>
-            <span className="hidden sm:inline">Insights</span>
-            <span className="sm:hidden">AI</span>
+          <TabsTrigger value="insights" className="flex-1 md:flex-initial">
+            <Lightbulb className="h-4 w-4 md:mr-2"/>
+            <span className="hidden md:inline">Insights</span>
+            <span className="md:hidden">AI</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex-1 sm:flex-initial col-span-2 sm:col-span-1">
-            <Settings className="h-4 w-4 sm:mr-2"/>
-            <span className="hidden sm:inline">Settings</span>
-            <span className="sm:hidden">Setup</span>
+          <TabsTrigger value="settings" className="flex-1 md:flex-initial col-span-2 md:col-span-1">
+            <Settings className="h-4 w-4 md:mr-2"/>
+            <span className="hidden md:inline">Settings</span>
+            <span className="md:hidden">Setup</span>
           </TabsTrigger>
         </TabsList>
 
