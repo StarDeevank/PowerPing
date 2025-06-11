@@ -85,8 +85,19 @@ export default function DashboardPage() {
 
   const [currentWattage, setCurrentWattage] = useState(0);
   const [liveGraphData, setLiveGraphData] = useState<{ time: number; wattage: number }[]>([]);
-  const timeCounterRef = useRef(0); // Use ref for timeCounter
+  const timeCounterRef = useRef(0);
   const [lastRolloverCheck, setLastRolloverCheck] = useState<Date>(startOfDay(new Date()));
+
+  // Refs for stable access in setInterval/setTimeout callbacks
+  const currentDayKWhRef = useRef(currentDayKWh);
+  const currentDayCostRef = useRef(currentDayCost);
+  const usageSettingsRef = useRef(usageSettings);
+  const appliancesRef = useRef(appliances); // To ensure fetchAIData in sleep toggle gets latest
+  
+  useEffect(() => { currentDayKWhRef.current = currentDayKWh; }, [currentDayKWh]);
+  useEffect(() => { currentDayCostRef.current = currentDayCost; }, [currentDayCost]);
+  useEffect(() => { usageSettingsRef.current = usageSettings; }, [usageSettings]);
+  useEffect(() => { appliancesRef.current = appliances; }, [appliances]);
 
 
   // Load from localStorage
@@ -124,33 +135,33 @@ export default function DashboardPage() {
 
 
   const fetchAIData = useCallback(async () => {
-    if (isSleepModeActive || appliances.length === 0) {
+    if (isSleepModeActive || appliancesRef.current.length === 0) {
       setEnergyPrediction(null);
       setPersonalizedTips([]);
       setIntelligentReminders([]);
-      if (isSleepModeActive && appliances.length > 0) {
+      if (isSleepModeActive && appliancesRef.current.length > 0) {
         toast({ title: "Sleep Mode Active", description: "AI insights are paused." });
       }
       return;
     }
 
     const commonInputBase = {
-      appliances: appliances.map(a => ({
+      appliances: appliancesRef.current.map(a => ({ // Use ref here
         deviceName: a.deviceName,
         room: a.room,
         powerRating: a.powerRating,
         estimatedDailyUsage: a.estimatedDailyUsage,
         status: a.status
       })),
-      monthlyElectricityBillGoal: usageSettings.monthlyElectricityBillGoal,
+      monthlyElectricityBillGoal: usageSettingsRef.current.monthlyElectricityBillGoal, // Use ref here
     };
 
     let allLoadedSuccessfully = true;
 
     setIsLoadingPrediction(true);
     try {
-      const predictionResult = await predictEnergyUsage({ ...commonInputBase, currency: usageSettings.currency });
-      setEnergyPrediction({...predictionResult, currency: usageSettings.currency});
+      const predictionResult = await predictEnergyUsage({ ...commonInputBase, currency: usageSettingsRef.current.currency }); // Use ref here
+      setEnergyPrediction({...predictionResult, currency: usageSettingsRef.current.currency}); // Use ref here
     } catch (error) {
       console.error("Error fetching energy prediction:", error);
       toast({ title: "AI Error", description: "Could not fetch energy prediction.", variant: "destructive" });
@@ -172,13 +183,13 @@ export default function DashboardPage() {
     setIsLoadingReminders(true);
     try {
       const remindersResult = await generateReminderRules({
-        appliances: appliances.map(a => ({
+        appliances: appliancesRef.current.map(a => ({ // Use ref here
             deviceName: a.deviceName,
             room: a.room,
             powerRating: a.powerRating,
             estimatedDailyUsage: a.estimatedDailyUsage
         })),
-        monthlyElectricityBillGoal: usageSettings.monthlyElectricityBillGoal,
+        monthlyElectricityBillGoal: usageSettingsRef.current.monthlyElectricityBillGoal, // Use ref here
       });
       setIntelligentReminders(remindersResult.reminderRules.map((rule, index) => ({ id: `reminder-${index}`, applianceName: rule.applianceName, rule: rule.rule })));
     } catch (error) {
@@ -188,36 +199,36 @@ export default function DashboardPage() {
       allLoadedSuccessfully = false;
     } finally { setIsLoadingReminders(false); }
 
-    if (allLoadedSuccessfully && !isSleepModeActive && appliances.length > 0) {
+    if (allLoadedSuccessfully && !isSleepModeActive && appliancesRef.current.length > 0) {
         toast({ title: "AI Insights Updated", description: "Predictions, tips, and reminders are up to date." });
     }
 
-  }, [usageSettings, appliances, toast, isSleepModeActive]);
+  }, [isSleepModeActive, toast]); // Removed appliances and usageSettings from deps, rely on refs
 
-  useEffect(() => { fetchAIData(); }, [appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency, fetchAIData]); 
+  useEffect(() => { fetchAIData(); }, [fetchAIData, appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency]); // Keep appliances and usageSettings here to trigger fetch on their change.
 
-  // Midnight Rollover Check
+  // Midnight Rollover Check - Stabilized
   useEffect(() => {
     const checkAndRollover = () => {
       const now = new Date();
       if (!isSameDay(now, lastRolloverCheck)) {
-        console.log("Midnight rollover detected. Saving previous day's data.");
+        console.log("Midnight rollover detected. Saving previous day's data (using refs).");
         const previousDay = subDays(now, 1);
         const previousDayKey = formatDateKey(previousDay);
 
         setDailyRecords(prevRecords => ({
           ...prevRecords,
           [previousDayKey]: {
-            totalKWh: currentDayKWh,
-            totalCost: currentDayCost,
-            currency: usageSettings.currency,
+            totalKWh: currentDayKWhRef.current,
+            totalCost: currentDayCostRef.current,
+            currency: usageSettingsRef.current.currency,
           }
         }));
 
         setCurrentDayKWh(0);
         setCurrentDayCost(0);
         setLiveGraphData([]);
-        timeCounterRef.current = 0; // Reset time counter for graph
+        timeCounterRef.current = 0;
         setLastRolloverCheck(startOfDay(now));
         toast({ title: "New Day Started", description: `Usage for ${format(previousDay, 'MMM d')} saved. Tracking for today.` });
 
@@ -226,22 +237,21 @@ export default function DashboardPage() {
       }
     };
 
-    checkAndRollover(); // Initial check
+    checkAndRollover(); 
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [lastRolloverCheck, currentDayKWh, currentDayCost, usageSettings.currency, toast]);
+  }, [lastRolloverCheck, toast]); // Dependencies are now stable or manage their own lifecycle for the interval's callback
 
 
   // Real-time wattage and current day accumulation
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0);
-        // Optionally clear live graph data when sleep mode activates
-        // setLiveGraphData([]); 
         return;
     }
     const interval = setInterval(() => {
       let totalWattage = 0;
+      // Access latest appliances via state directly for this interval, as it re-runs if appliances change
       appliances.forEach(app => {
         if (app.status) {
           const applianceSpecificWattage = getApplianceWattage(app);
@@ -258,7 +268,7 @@ export default function DashboardPage() {
         return updatedData.length > MAX_LIVE_GRAPH_POINTS ? updatedData.slice(-MAX_LIVE_GRAPH_POINTS) : updatedData;
       });
 
-      const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15;
+      const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15; // Use ref here
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
 
       setCurrentDayKWh(prev => prev + kWhForInterval);
@@ -266,7 +276,7 @@ export default function DashboardPage() {
 
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
-  }, [appliances, usageSettings.currency, isSleepModeActive]); 
+  }, [appliances, isSleepModeActive]); // Keep appliances and isSleepModeActive, as the interval logic directly depends on them. usageSettings.currency is now via ref.
 
 
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
@@ -311,7 +321,7 @@ export default function DashboardPage() {
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats continue, some controls may be limited." });
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal. AI insights will refresh." });
-      fetchAIData();
+      fetchAIData(); // Call fetchAIData which now uses refs for appliances/settings
     }
   };
 
@@ -329,7 +339,7 @@ export default function DashboardPage() {
         total += record.totalCost;
       }
     });
-     return total + currentDayCost;
+     return total + currentDayCost; // currentDayCost is state, correctly triggers re-calc
   }, [dailyRecords, currentDayCost]);
 
 
