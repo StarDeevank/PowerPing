@@ -104,7 +104,7 @@ export function UsageSettingsForm({ onSubmit, initialData }: UsageSettingsFormPr
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full bg-primary hover:bg-primary/90">Save Settings</Button>
+        <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">Save Settings</Button>
       </form>
     </Form>
   );
