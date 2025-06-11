@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -27,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw, Sparkles, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label"; // Ensure Label is imported
+import { Label } from "@/components/ui/label"; 
 
 const initialUsageSettings: UsageSettings = { monthlyElectricityBillGoal: 1000, currency: '₹' };
 
@@ -260,8 +259,7 @@ export default function DashboardPage() {
   const hasInitialSetup = appliances.length > 0;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-foreground pt-2">PowerPing Dashboard</h1>
+    <div className="space-y-6 pt-6"> {/* Added pt-6 for spacing from top */}
       
       <div className="flex justify-end items-center space-x-2">
          <Button 
