@@ -103,8 +103,11 @@ export default function DashboardPage() {
             if (parsedSettings && typeof parsedSettings.monthlyElectricityBillGoal === 'number' && (parsedSettings.currency === '₹' || parsedSettings.currency === '$')) {
                  setUsageSettings(parsedSettings);
             } else {
-                setUsageSettings(initialUsageSettings); // Fallback to initial if structure is wrong
+                console.warn("Loaded usageSettings has incorrect structure, defaulting.");
+                setUsageSettings(initialUsageSettings); 
             }
+        } else {
+             setUsageSettings(initialUsageSettings);
         }
     } catch (e) { console.error("Error parsing usage settings from localStorage", e); setUsageSettings(initialUsageSettings); }
 
@@ -112,24 +115,31 @@ export default function DashboardPage() {
         const storedAppliances = localStorage.getItem('powerping_appliances');
         if (storedAppliances) {
             const parsedAppliances = JSON.parse(storedAppliances);
-            if(Array.isArray(parsedAppliances)) { // Basic check, ideally validate schema
+            if(Array.isArray(parsedAppliances)) { 
                 setAppliances(parsedAppliances);
+            } else {
+                console.warn("Loaded appliances is not an array, defaulting to empty.");
+                setAppliances([]);
             }
+        } else {
+            setAppliances([]);
         }
-    } catch (e) { console.error("Error parsing appliances from localStorage", e); }
+    } catch (e) { console.error("Error parsing appliances from localStorage", e); setAppliances([]);}
 
     try {
         const storedSleepMode = localStorage.getItem('powerping_sleepMode');
         if (storedSleepMode) {
-            setIsSleepModeActive(JSON.parse(storedSleepMode) === true); // Ensure boolean
+            setIsSleepModeActive(JSON.parse(storedSleepMode) === true);
+        } else {
+            setIsSleepModeActive(false);
         }
-    } catch (e) { console.error("Error parsing sleep mode from localStorage", e); }
+    } catch (e) { console.error("Error parsing sleep mode from localStorage", e); setIsSleepModeActive(false); }
     
     try {
         const storedDailyRecords = localStorage.getItem('powerping_dailyRecords');
         if (storedDailyRecords) {
           const parsedRecords = JSON.parse(storedDailyRecords);
-          if (typeof parsedRecords === 'object' && parsedRecords !== null && !Array.isArray(parsedRecords)) { // Check it's a record object
+          if (typeof parsedRecords === 'object' && parsedRecords !== null && !Array.isArray(parsedRecords)) { 
             setDailyRecords(parsedRecords);
           } else {
             console.warn("Loaded dailyRecords is not a valid object, defaulting to empty.");
@@ -144,21 +154,26 @@ export default function DashboardPage() {
     }
 
     const todayKey = formatDateKey(new Date());
-    const storedTodayKWh = localStorage.getItem(`powerping_currentDayKWh_${todayKey}`);
-    if (storedTodayKWh) {
-        const parsedKWh = parseFloat(storedTodayKWh);
-        setCurrentDayKWh(isNaN(parsedKWh) ? 0 : parsedKWh);
-    } else {
-        setCurrentDayKWh(0);
-    }
+    try {
+        const storedTodayKWh = localStorage.getItem(`powerping_currentDayKWh_${todayKey}`);
+        if (storedTodayKWh) {
+            const parsedKWh = parseFloat(storedTodayKWh);
+            setCurrentDayKWh(isNaN(parsedKWh) ? 0 : parsedKWh);
+        } else {
+            setCurrentDayKWh(0);
+        }
+    } catch(e) { console.error("Error loading currentDayKWh from localStorage", e); setCurrentDayKWh(0); }
 
-    const storedTodayCost = localStorage.getItem(`powerping_currentDayCost_${todayKey}`);
-    if (storedTodayCost) {
-        const parsedCost = parseFloat(storedTodayCost);
-        setCurrentDayCost(isNaN(parsedCost) ? 0 : parsedCost);
-    } else {
-        setCurrentDayCost(0);
-    }
+    try {
+        const storedTodayCost = localStorage.getItem(`powerping_currentDayCost_${todayKey}`);
+        if (storedTodayCost) {
+            const parsedCost = parseFloat(storedTodayCost);
+            setCurrentDayCost(isNaN(parsedCost) ? 0 : parsedCost);
+        } else {
+            setCurrentDayCost(0);
+        }
+    } catch(e) { console.error("Error loading currentDayCost from localStorage", e); setCurrentDayCost(0); }
+    
     setLastRolloverCheck(startOfDay(new Date()));
   }, []);
 
@@ -280,9 +295,6 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0);
-        // Potentially clear liveGraphData if sleep mode means no wattage updates
-        // setLiveGraphData([]); 
-        // timeCounterRef.current = 0;
         return;
     }
     const interval = setInterval(() => {
@@ -305,8 +317,16 @@ export default function DashboardPage() {
 
       const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15;
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
-      setCurrentDayKWh(prev => prev + kWhForInterval);
-      setCurrentDayCost(prev => prev + (kWhForInterval * costPerKWh));
+      
+      setCurrentDayKWh(prev => {
+          const newTotalKWh = prev + kWhForInterval;
+          return isNaN(newTotalKWh) ? 0 : newTotalKWh;
+      });
+      setCurrentDayCost(prev => {
+          const newTotalCost = prev + (kWhForInterval * costPerKWh);
+          return isNaN(newTotalCost) ? 0 : newTotalCost;
+      });
+
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
   }, [isSleepModeActive]);
@@ -376,7 +396,8 @@ export default function DashboardPage() {
         }
       }
     });
-     return total + (typeof currentDayCost === 'number' && !isNaN(currentDayCost) ? currentDayCost : 0);
+     const currentCostValid = typeof currentDayCost === 'number' && !isNaN(currentDayCost) ? currentDayCost : 0;
+     return total + currentCostValid;
   }, [dailyRecords, currentDayCost]);
 
   return (
@@ -428,28 +449,28 @@ export default function DashboardPage() {
       )}
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 mb-6">
-          <TabsTrigger value="dashboard" className="flex-1 md:flex-initial">
+        <TabsList className="flex w-full overflow-x-auto whitespace-nowrap p-1 mb-6 bg-muted text-muted-foreground rounded-md">
+          <TabsTrigger value="dashboard" className="px-3 py-1.5">
             <BarChart2 className="h-4 w-4 md:mr-2"/>
             <span className="hidden md:inline">Dashboard</span>
             <span className="md:hidden">Dash</span>
           </TabsTrigger>
-          <TabsTrigger value="appliances" className="flex-1 md:flex-initial">
+          <TabsTrigger value="appliances" className="px-3 py-1.5">
             <Zap className="h-4 w-4 md:mr-2"/>
             <span className="hidden md:inline">Appliances</span>
             <span className="md:hidden">Devices</span>
           </TabsTrigger>
-          <TabsTrigger value="livestats" className="flex-1 md:flex-initial">
+          <TabsTrigger value="livestats" className="px-3 py-1.5">
             <AlertCircle className="h-4 w-4 md:mr-2"/>
             <span className="hidden md:inline">Live Stats</span>
             <span className="md:hidden">Live</span>
           </TabsTrigger>
-          <TabsTrigger value="insights" className="flex-1 md:flex-initial">
+          <TabsTrigger value="insights" className="px-3 py-1.5">
             <Lightbulb className="h-4 w-4 md:mr-2"/>
             <span className="hidden md:inline">Insights</span>
             <span className="md:hidden">AI</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex-1 md:flex-initial col-span-2 md:col-span-1">
+          <TabsTrigger value="settings" className="px-3 py-1.5">
             <Settings className="h-4 w-4 md:mr-2"/>
             <span className="hidden md:inline">Settings</span>
             <span className="md:hidden">Setup</span>
@@ -682,4 +703,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+    
+
     
