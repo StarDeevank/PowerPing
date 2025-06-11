@@ -94,6 +94,16 @@ export interface DisplayIntelligentReminder {
 }
 
 export interface RealTimeDataPoint {
-  time: number;
-  value: number;
+  time: number; // Represents a sequence or relative time for the graph
+  wattage: number;
 }
+
+// New type for storing daily aggregated usage
+export interface DailyUsageRecord {
+  date: string; // YYYY-MM-DD
+  totalKWh: number;
+  totalCost: number;
+  currency: '₹' | '$';
+}
+
+export type DailyRecords = Record<string, Omit<DailyUsageRecord, 'date'>>; // Keyed by YYYY-MM-DD date string
