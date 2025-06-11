@@ -37,13 +37,10 @@ const MAX_LIVE_GRAPH_POINTS = 30;
 const REALTIME_UPDATE_INTERVAL = 1000; // ms (1 second)
 const MIDNIGHT_CHECK_INTERVAL = 60000; // 1 minute, to check for day change
 
-// Helper for wattage estimation
 const getApplianceWattage = (appliance: Appliance): number => {
     if (appliance.powerRating && appliance.powerRating > 0) {
-      // Add a small fluctuation (+/- 2.5%) if powerRating is provided by user
       return appliance.powerRating + (Math.random() - 0.5) * (appliance.powerRating * 0.05);
     }
-    // Infer from deviceName if powerRating is not provided, using more stable typical values
     const name = appliance.deviceName.toLowerCase();
     if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 15;
     if (name.includes('fan')) return 60;
@@ -54,8 +51,7 @@ const getApplianceWattage = (appliance: Appliance): number => {
     if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 100;
     if (name.includes('oven') || name.includes('microwave')) return 1000;
     if (name.includes('washer') || name.includes('washing machine')) return 400;
-
-    return 100; // Default for unknown types
+    return 100; 
 };
 
 const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
@@ -79,7 +75,6 @@ export default function DashboardPage() {
   const [isSleepModeActive, setIsSleepModeActive] = useState(false);
 
   const [dailyRecords, setDailyRecords] = useState<DailyRecords>({});
-
   const [currentDayKWh, setCurrentDayKWh] = useState(0);
   const [currentDayCost, setCurrentDayCost] = useState(0);
 
@@ -88,7 +83,6 @@ export default function DashboardPage() {
   const timeCounterRef = useRef(0);
   const [lastRolloverCheck, setLastRolloverCheck] = useState<Date>(startOfDay(new Date()));
 
-  // Refs for stable access in setInterval/setTimeout callbacks
   const currentDayKWhRef = useRef(currentDayKWh);
   const currentDayCostRef = useRef(currentDayCost);
   const usageSettingsRef = useRef(usageSettings);
@@ -99,8 +93,6 @@ export default function DashboardPage() {
   useEffect(() => { usageSettingsRef.current = usageSettings; }, [usageSettings]);
   useEffect(() => { appliancesRef.current = appliances; }, [appliances]);
 
-
-  // Load from localStorage
   useEffect(() => {
     const storedUsageSettings = localStorage.getItem('powerping_usageSettings');
     if (storedUsageSettings) {
@@ -134,8 +126,6 @@ export default function DashboardPage() {
       try {
         const parsedRecords = JSON.parse(storedDailyRecords);
         if (typeof parsedRecords === 'object' && parsedRecords !== null) {
-          // Basic validation for records structure can be added here if needed
-          // e.g., check if each record has totalKWh, totalCost as numbers
           setDailyRecords(parsedRecords);
         } else {
           console.warn("Loaded dailyRecords is not a valid object, defaulting to empty.");
@@ -145,6 +135,8 @@ export default function DashboardPage() {
         console.error("Error parsing dailyRecords from localStorage", e);
         setDailyRecords({});
       }
+    } else {
+      setDailyRecords({});
     }
 
     const todayKey = formatDateKey(new Date());
@@ -153,7 +145,7 @@ export default function DashboardPage() {
         const parsedKWh = parseFloat(storedTodayKWh);
         setCurrentDayKWh(isNaN(parsedKWh) ? 0 : parsedKWh);
     } else {
-        setCurrentDayKWh(0); // Ensure it's 0 if not found for today
+        setCurrentDayKWh(0);
     }
 
     const storedTodayCost = localStorage.getItem(`powerping_currentDayCost_${todayKey}`);
@@ -161,24 +153,25 @@ export default function DashboardPage() {
         const parsedCost = parseFloat(storedTodayCost);
         setCurrentDayCost(isNaN(parsedCost) ? 0 : parsedCost);
     } else {
-        setCurrentDayCost(0); // Ensure it's 0 if not found for today
+        setCurrentDayCost(0);
     }
-
     setLastRolloverCheck(startOfDay(new Date()));
   }, []);
 
-  // Save to localStorage
-  useEffect(() => { localStorage.setItem('powerping_usageSettings', JSON.stringify(usageSettings));}, [usageSettings]);
-  useEffect(() => { localStorage.setItem('powerping_appliances', JSON.stringify(appliances));}, [appliances]);
-  useEffect(() => { localStorage.setItem('powerping_sleepMode', JSON.stringify(isSleepModeActive));}, [isSleepModeActive]);
-  useEffect(() => { localStorage.setItem('powerping_dailyRecords', JSON.stringify(dailyRecords));}, [dailyRecords]);
+  useEffect(() => { try { localStorage.setItem('powerping_usageSettings', JSON.stringify(usageSettings)); } catch(e) { console.error("Error saving usage settings to localStorage", e); }}, [usageSettings]);
+  useEffect(() => { try { localStorage.setItem('powerping_appliances', JSON.stringify(appliances)); } catch(e) { console.error("Error saving appliances to localStorage", e); }}, [appliances]);
+  useEffect(() => { try { localStorage.setItem('powerping_sleepMode', JSON.stringify(isSleepModeActive)); } catch(e) { console.error("Error saving sleep mode to localStorage", e); }}, [isSleepModeActive]);
+  useEffect(() => { try { localStorage.setItem('powerping_dailyRecords', JSON.stringify(dailyRecords)); } catch(e) { console.error("Error saving daily records to localStorage", e); }}, [dailyRecords]);
 
   useEffect(() => {
     const todayKey = formatDateKey(new Date());
-    localStorage.setItem(`powerping_currentDayKWh_${todayKey}`, currentDayKWh.toString());
-    localStorage.setItem(`powerping_currentDayCost_${todayKey}`, currentDayCost.toString());
+    try {
+      localStorage.setItem(`powerping_currentDayKWh_${todayKey}`, currentDayKWh.toString());
+      localStorage.setItem(`powerping_currentDayCost_${todayKey}`, currentDayCost.toString());
+    } catch (e) {
+      console.error("Error saving current day KWh/Cost to localStorage", e);
+    }
   }, [currentDayKWh, currentDayCost]);
-
 
   const fetchAIData = useCallback(async () => {
     if (isSleepModeActive || appliancesRef.current.length === 0) {
@@ -190,7 +183,6 @@ export default function DashboardPage() {
       }
       return;
     }
-
     const commonInputBase = {
       appliances: appliancesRef.current.map(a => ({
         deviceName: a.deviceName,
@@ -201,9 +193,7 @@ export default function DashboardPage() {
       })),
       monthlyElectricityBillGoal: usageSettingsRef.current.monthlyElectricityBillGoal,
     };
-
     let allLoadedSuccessfully = true;
-
     setIsLoadingPrediction(true);
     try {
       const predictionResult = await predictEnergyUsage({ ...commonInputBase, currency: usageSettingsRef.current.currency });
@@ -214,7 +204,6 @@ export default function DashboardPage() {
       setEnergyPrediction(null);
       allLoadedSuccessfully = false;
     } finally { setIsLoadingPrediction(false); }
-
     setIsLoadingTips(true);
     try {
       const tipsResult = await generatePersonalizedTips(commonInputBase);
@@ -225,7 +214,6 @@ export default function DashboardPage() {
       setPersonalizedTips([]);
       allLoadedSuccessfully = false;
     } finally { setIsLoadingTips(false); }
-
     setIsLoadingReminders(true);
     try {
       const remindersResult = await generateReminderRules({
@@ -244,16 +232,13 @@ export default function DashboardPage() {
       setIntelligentReminders([]);
       allLoadedSuccessfully = false;
     } finally { setIsLoadingReminders(false); }
-
     if (allLoadedSuccessfully && !isSleepModeActive && appliancesRef.current.length > 0) {
         toast({ title: "AI Insights Updated", description: "Predictions, tips, and reminders are up to date." });
     }
-
   }, [isSleepModeActive, toast]);
 
   useEffect(() => { fetchAIData(); }, [fetchAIData, appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency]);
 
-  // Midnight Rollover Check - Stabilized
   useEffect(() => {
     const checkAndRollover = () => {
       const now = new Date();
@@ -261,7 +246,6 @@ export default function DashboardPage() {
         console.log("Midnight rollover detected. Saving previous day's data (using refs).");
         const previousDay = subDays(now, 1);
         const previousDayKey = formatDateKey(previousDay);
-
         setDailyRecords(prevRecords => ({
           ...prevRecords,
           [previousDayKey]: {
@@ -270,26 +254,25 @@ export default function DashboardPage() {
             currency: usageSettingsRef.current.currency,
           }
         }));
-
         setCurrentDayKWh(0);
         setCurrentDayCost(0);
         setLiveGraphData([]);
         timeCounterRef.current = 0;
         setLastRolloverCheck(startOfDay(now));
         toast({ title: "New Day Started", description: `Usage for ${format(previousDay, 'MMM d')} saved. Tracking for today.` });
-
-        localStorage.removeItem(`powerping_currentDayKWh_${previousDayKey}`);
-        localStorage.removeItem(`powerping_currentDayCost_${previousDayKey}`);
+        try {
+          localStorage.removeItem(`powerping_currentDayKWh_${previousDayKey}`);
+          localStorage.removeItem(`powerping_currentDayCost_${previousDayKey}`);
+        } catch (e) {
+          console.error("Error removing previous day's KWh/Cost from localStorage", e);
+        }
       }
     };
-
     checkAndRollover(); 
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
   }, [lastRolloverCheck, toast]);
 
-
-  // Real-time wattage and current day accumulation
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0);
@@ -297,7 +280,7 @@ export default function DashboardPage() {
     }
     const interval = setInterval(() => {
       let totalWattage = 0;
-      appliances.forEach(app => {
+      appliancesRef.current.forEach(app => { // Use ref here
         if (app.status) {
           const applianceSpecificWattage = getApplianceWattage(app);
           totalWattage += applianceSpecificWattage;
@@ -313,16 +296,13 @@ export default function DashboardPage() {
         return updatedData.length > MAX_LIVE_GRAPH_POINTS ? updatedData.slice(-MAX_LIVE_GRAPH_POINTS) : updatedData;
       });
 
-      const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15;
+      const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15; // Use ref
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
-
       setCurrentDayKWh(prev => prev + kWhForInterval);
       setCurrentDayCost(prev => prev + (kWhForInterval * costPerKWh));
-
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
-  }, [appliances, isSleepModeActive]);
-
+  }, [isSleepModeActive]); // Dependencies: isSleepModeActive. appliancesRef and usageSettingsRef are stable.
 
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
 
@@ -334,7 +314,8 @@ export default function DashboardPage() {
       const newAppliance: Appliance = {
         id: Date.now().toString(),
         ...data,
-        powerRating: data.powerRating ? Number(data.powerRating) : undefined
+        powerRating: data.powerRating ? Number(data.powerRating) : undefined,
+        // applianceType is removed
       };
       setAppliances([...appliances, newAppliance]);
       toast({ title: "Success", description: "Appliance added!" });
@@ -377,9 +358,7 @@ export default function DashboardPage() {
     let total = 0;
     const currentMonthValue = getMonth(new Date());
     const currentYearValue = getYear(new Date());
-
     Object.entries(dailyRecords).forEach(([dateKey, record]) => {
-      // Ensure record and record.totalCost are valid before adding
       if (record && typeof record.totalCost === 'number' && !isNaN(record.totalCost)) {
         try {
           const recordDate = parseISO(dateKey); 
@@ -393,7 +372,6 @@ export default function DashboardPage() {
     });
      return total + (typeof currentDayCost === 'number' && !isNaN(currentDayCost) ? currentDayCost : 0);
   }, [dailyRecords, currentDayCost]);
-
 
   return (
     <div className="space-y-6 pt-6">
@@ -698,6 +676,4 @@ export default function DashboardPage() {
     </div>
   );
 }
-    
-
     
