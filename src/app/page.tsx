@@ -15,11 +15,10 @@ import RealTimeFeedbackItem from '@/components/dashboard/RealTimeFeedbackItem';
 import SectionTitle from '@/components/common/SectionTitle';
 import EnergyConsumptionChart from '@/components/dashboard/EnergyConsumptionChart';
 import LiveWattageChart from '@/components/dashboard/LiveWattageChart';
-// import DayNavigator from '@/components/dashboard/DayNavigator'; // Removed
 import type {
   Appliance, UsageSettings,
   EnergyPredictionData, DisplayIntelligentReminder, DisplayPersonalizedTip,
-  DailyRecords, DailyUsageRecord
+  DailyRecords
 } from '@/types';
 import { predictEnergyUsage } from '@/ai/flows/energy-prediction';
 import { generatePersonalizedTips } from '@/ai/flows/personalized-tips';
@@ -30,7 +29,7 @@ import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, Slide
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { format, isSameDay, startOfDay, subDays, parseISO, getMonth, getYear, eachDayOfInterval, endOfMonth, startOfMonth } from 'date-fns';
+import { format, isSameDay, startOfDay, subDays, parseISO, getMonth, getYear } from 'date-fns';
 
 const initialUsageSettings: UsageSettings = { monthlyElectricityBillGoal: 1000, currency: '₹' };
 
@@ -43,16 +42,18 @@ const getApplianceWattage = (appliance: Appliance): number => {
     if (appliance.powerRating && appliance.powerRating > 0) {
       return appliance.powerRating;
     }
-    switch (appliance.applianceType.toLowerCase()) {
-      case 'light': return 10 + Math.random() * 10;
-      case 'fan': return 50 + Math.random() * 25;
-      case 'air conditioner': return 1000 + Math.random() * 500;
-      case 'refrigerator': return 100 + Math.random() * 100;
-      case 'television': return 60 + Math.random() * 90;
-      case 'geyser/water heater': return 2000 + Math.random() * 1000;
-      case 'computer/laptop': return 50 + Math.random() * 100;
-      default: return 75 + Math.random() * 75;
-    }
+    const name = appliance.deviceName.toLowerCase();
+    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 10 + Math.random() * 10;
+    if (name.includes('fan')) return 50 + Math.random() * 25;
+    if (name.includes('ac') || name.includes('air conditioner')) return 1000 + Math.random() * 500;
+    if (name.includes('fridge') || name.includes('refrigerator')) return 100 + Math.random() * 100;
+    if (name.includes('tv') || name.includes('television')) return 60 + Math.random() * 90;
+    if (name.includes('geyser') || name.includes('water heater')) return 2000 + Math.random() * 1000;
+    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 50 + Math.random() * 100;
+    if (name.includes('oven') || name.includes('microwave')) return 800 + Math.random() * 400;
+    if (name.includes('washer') || name.includes('washing machine')) return 300 + Math.random() * 200;
+
+    return 75 + Math.random() * 75; // Default for unknown types
 };
 
 const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
@@ -65,26 +66,24 @@ export default function DashboardPage() {
   const [energyPrediction, setEnergyPrediction] = useState<EnergyPredictionData | null>(null);
   const [personalizedTips, setPersonalizedTips] = useState<DisplayPersonalizedTip[]>([]);
   const [intelligentReminders, setIntelligentReminders] = useState<DisplayIntelligentReminder[]>([]);
-  
+
   const [isLoadingPrediction, setIsLoadingPrediction] = useState(false);
   const [isLoadingTips, setIsLoadingTips] = useState(false);
   const [isLoadingReminders, setIsLoadingReminders] = useState(false);
-  
+
   const [isApplianceFormOpen, setIsApplianceFormOpen] = useState(false);
   const [isUsageSettingsDialogOpen, setIsUsageSettingsDialogOpen] = useState(false);
   const [editingAppliance, setEditingAppliance] = useState<Appliance | undefined>(undefined);
   const [isSleepModeActive, setIsSleepModeActive] = useState(false);
-  
-  // Real-time and daily tracking state
-  // const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date())); // Removed
+
   const [dailyRecords, setDailyRecords] = useState<DailyRecords>({});
-  
-  const [currentDayKWh, setCurrentDayKWh] = useState(0); // Accumulates for the actual current day
-  const [currentDayCost, setCurrentDayCost] = useState(0); // Accumulates for the actual current day
-  
+
+  const [currentDayKWh, setCurrentDayKWh] = useState(0);
+  const [currentDayCost, setCurrentDayCost] = useState(0);
+
   const [currentWattage, setCurrentWattage] = useState(0);
   const [liveGraphData, setLiveGraphData] = useState<{ time: number; wattage: number }[]>([]);
-  const [timeCounter, setTimeCounter] = useState(0); // For live graph x-axis
+  const [timeCounter, setTimeCounter] = useState(0);
   const [lastRolloverCheck, setLastRolloverCheck] = useState<Date>(startOfDay(new Date()));
 
 
@@ -96,7 +95,7 @@ export default function DashboardPage() {
     if (storedAppliances) setAppliances(JSON.parse(storedAppliances));
     const storedSleepMode = localStorage.getItem('powerping_sleepMode');
     if (storedSleepMode) setIsSleepModeActive(JSON.parse(storedSleepMode));
-    
+
     const storedDailyRecords = localStorage.getItem('powerping_dailyRecords');
     if (storedDailyRecords) setDailyRecords(JSON.parse(storedDailyRecords));
 
@@ -105,8 +104,8 @@ export default function DashboardPage() {
     if (storedTodayKWh) setCurrentDayKWh(parseFloat(storedTodayKWh));
     const storedTodayCost = localStorage.getItem(`powerping_currentDayCost_${todayKey}`);
     if (storedTodayCost) setCurrentDayCost(parseFloat(storedTodayCost));
-    
-    setLastRolloverCheck(startOfDay(new Date())); 
+
+    setLastRolloverCheck(startOfDay(new Date()));
   }, []);
 
   // Save to localStorage
@@ -127,29 +126,29 @@ export default function DashboardPage() {
       setEnergyPrediction(null);
       setPersonalizedTips([]);
       setIntelligentReminders([]);
-      if (isSleepModeActive && appliances.length > 0) { 
+      if (isSleepModeActive && appliances.length > 0) {
         toast({ title: "Sleep Mode Active", description: "AI insights are paused." });
       }
       return;
     }
 
-    const commonInput = {
-      appliances: appliances.map(a => ({ 
-        deviceName: a.deviceName, 
-        room: a.room, 
-        applianceType: a.applianceType,
+    const commonInputBase = {
+      appliances: appliances.map(a => ({
+        deviceName: a.deviceName,
+        room: a.room,
+        // applianceType: a.applianceType, // Removed
         powerRating: a.powerRating,
-        estimatedDailyUsage: a.estimatedDailyUsage, 
-        status: a.status 
+        estimatedDailyUsage: a.estimatedDailyUsage,
+        status: a.status
       })),
       monthlyElectricityBillGoal: usageSettings.monthlyElectricityBillGoal,
     };
-    
+
     let allLoadedSuccessfully = true;
 
     setIsLoadingPrediction(true);
     try {
-      const predictionResult = await predictEnergyUsage({ ...commonInput, currency: usageSettings.currency });
+      const predictionResult = await predictEnergyUsage({ ...commonInputBase, currency: usageSettings.currency });
       setEnergyPrediction({...predictionResult, currency: usageSettings.currency});
     } catch (error) {
       console.error("Error fetching energy prediction:", error);
@@ -160,7 +159,7 @@ export default function DashboardPage() {
 
     setIsLoadingTips(true);
     try {
-      const tipsResult = await generatePersonalizedTips(commonInput);
+      const tipsResult = await generatePersonalizedTips(commonInputBase);
       setPersonalizedTips(tipsResult.tips.map((tip, index) => ({ id: `tip-${index}`, text: tip })));
     } catch (error) {
       console.error("Error fetching personalized tips:", error);
@@ -172,12 +171,12 @@ export default function DashboardPage() {
     setIsLoadingReminders(true);
     try {
       const remindersResult = await generateReminderRules({
-        appliances: appliances.map(a => ({ 
-            deviceName: a.deviceName, 
-            room: a.room, 
-            applianceType: a.applianceType,
+        appliances: appliances.map(a => ({
+            deviceName: a.deviceName,
+            room: a.room,
+            // applianceType: a.applianceType, // Removed
             powerRating: a.powerRating,
-            estimatedDailyUsage: a.estimatedDailyUsage 
+            estimatedDailyUsage: a.estimatedDailyUsage
         })),
         monthlyElectricityBillGoal: usageSettings.monthlyElectricityBillGoal,
       });
@@ -188,14 +187,14 @@ export default function DashboardPage() {
       setIntelligentReminders([]);
       allLoadedSuccessfully = false;
     } finally { setIsLoadingReminders(false); }
-    
+
     if (allLoadedSuccessfully && !isSleepModeActive && appliances.length > 0) {
         toast({ title: "AI Insights Updated", description: "Predictions, tips, and reminders are up to date." });
     }
 
   }, [usageSettings, appliances, toast, isSleepModeActive]);
 
-  useEffect(() => { fetchAIData(); }, [appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency]); 
+  useEffect(() => { fetchAIData(); }, [appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency, fetchAIData]); // Added fetchAIData to dependency array
 
   // Midnight Rollover Check
   useEffect(() => {
@@ -209,25 +208,25 @@ export default function DashboardPage() {
         setDailyRecords(prevRecords => ({
           ...prevRecords,
           [previousDayKey]: {
-            totalKWh: currentDayKWh, 
-            totalCost: currentDayCost, 
+            totalKWh: currentDayKWh,
+            totalCost: currentDayCost,
             currency: usageSettings.currency,
           }
         }));
-        
+
         setCurrentDayKWh(0);
         setCurrentDayCost(0);
-        setLiveGraphData([]); 
+        setLiveGraphData([]);
         setTimeCounter(0);
         setLastRolloverCheck(startOfDay(now));
         toast({ title: "New Day Started", description: `Usage for ${format(previousDay, 'MMM d')} saved. Tracking for today.` });
-        
+
         localStorage.removeItem(`powerping_currentDayKWh_${previousDayKey}`);
         localStorage.removeItem(`powerping_currentDayCost_${previousDayKey}`);
       }
     };
 
-    checkAndRollover(); 
+    checkAndRollover();
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
   }, [lastRolloverCheck, currentDayKWh, currentDayCost, usageSettings.currency, toast]);
@@ -236,7 +235,7 @@ export default function DashboardPage() {
   // Real-time wattage and current day accumulation
   useEffect(() => {
     if (isSleepModeActive) {
-        setCurrentWattage(0); 
+        setCurrentWattage(0);
         return;
     }
     const interval = setInterval(() => {
@@ -244,21 +243,21 @@ export default function DashboardPage() {
       appliances.forEach(app => {
         if (app.status) {
           const baseWattage = getApplianceWattage(app);
-          totalWattage += baseWattage + (Math.random() * baseWattage * 0.1); 
+          totalWattage += baseWattage + (Math.random() * baseWattage * 0.1);
         }
       });
       const newCurrentWattage = parseFloat(totalWattage.toFixed(0));
       setCurrentWattage(newCurrentWattage);
-      
+
       setTimeCounter(prev => prev + 1);
       setLiveGraphData(prevData => {
         const newData = [...prevData, { time: timeCounter, wattage: newCurrentWattage }];
         return newData.length > MAX_LIVE_GRAPH_POINTS ? newData.slice(-MAX_LIVE_GRAPH_POINTS) : newData;
       });
-      
-      const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15; 
+
+      const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15;
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
-      
+
       setCurrentDayKWh(prev => prev + kWhForInterval);
       setCurrentDayCost(prev => prev + (kWhForInterval * costPerKWh));
 
@@ -274,10 +273,10 @@ export default function DashboardPage() {
       setAppliances(appliances.map(app => app.id === editingAppliance.id ? { ...editingAppliance, ...data } : app));
       toast({ title: "Success", description: "Appliance updated!" });
     } else {
-      const newAppliance: Appliance = { 
-        id: Date.now().toString(), 
-        ...data, 
-        powerRating: data.powerRating ? Number(data.powerRating) : undefined 
+      const newAppliance: Appliance = {
+        id: Date.now().toString(),
+        ...data,
+        powerRating: data.powerRating ? Number(data.powerRating) : undefined
       };
       setAppliances([...appliances, newAppliance]);
       toast({ title: "Success", description: "Appliance added!" });
@@ -300,7 +299,7 @@ export default function DashboardPage() {
       return app;
     }));
   };
-  
+
   const openAddApplianceForm = () => { setEditingAppliance(undefined); setIsApplianceFormOpen(true); }
   const handleToggleSleepMode = () => {
     const newSleepModeState = !isSleepModeActive;
@@ -309,10 +308,10 @@ export default function DashboardPage() {
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats continue, some controls may be limited." });
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal. AI insights will refresh." });
-      fetchAIData(); 
+      fetchAIData();
     }
   };
-  
+
   const isAIDataLoading = isLoadingPrediction || isLoadingTips || isLoadingReminders;
   const hasInitialSetup = appliances.length > 0;
 
@@ -327,19 +326,18 @@ export default function DashboardPage() {
         total += record.totalCost;
       }
     });
-     return total + currentDayCost; 
+     return total + currentDayCost;
   }, [dailyRecords, currentDayCost]);
 
 
   return (
     <div className="space-y-6 pt-6">
       <div className="flex flex-col sm:flex-row justify-end items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
-        {/* DayNavigator removed */}
         <div className="flex items-center space-x-2">
-          <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={fetchAIData} 
+          <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchAIData}
               disabled={isSleepModeActive || isAIDataLoading || !hasInitialSetup}
               aria-label="Refresh AI Data"
             >
@@ -359,7 +357,7 @@ export default function DashboardPage() {
           <ApplianceForm onSubmit={handleApplianceSubmit} initialData={editingAppliance} submitButtonText={editingAppliance ? 'Save Changes' : 'Add Appliance'} />
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={isUsageSettingsDialogOpen} onOpenChange={setIsUsageSettingsDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Usage Settings</DialogTitle></DialogHeader>
@@ -424,8 +422,8 @@ export default function DashboardPage() {
                   To unlock personalized AI insights, please add your appliances.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     onClick={openAddApplianceForm}
                     className="bg-accent text-accent-foreground hover:bg-accent/90"
                   >
@@ -453,7 +451,7 @@ export default function DashboardPage() {
           {hasInitialSetup && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                 {isSleepModeActive ? ( 
+                 {isSleepModeActive ? (
                      <Card>
                         <CardHeader><CardTitle>Real-Time Features Paused</CardTitle></CardHeader>
                         <CardContent><p className="text-muted-foreground">Sleep mode is active. Some real-time dashboard features are paused.</p></CardContent>
@@ -565,7 +563,7 @@ export default function DashboardPage() {
             </Card>
           )}
         </TabsContent>
-        
+
         <TabsContent value="insights">
            <SectionTitle>AI Insights</SectionTitle>
            {isSleepModeActive || !hasInitialSetup ? (
@@ -631,5 +629,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

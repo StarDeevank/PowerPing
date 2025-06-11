@@ -4,8 +4,8 @@ export interface Appliance {
   id: string;
   deviceName: string;
   room: string;
-  applianceType: string; // New: e.g., 'Light', 'Fan', 'AC'
-  powerRating?: number; // New: Optional, in Watts
+  // applianceType: string; // Removed
+  powerRating?: number; // Optional, in Watts
   estimatedDailyUsage: number; // hours
   status: boolean; // On/Off
 }
@@ -22,7 +22,7 @@ export interface PersonalizedTipsGenAIInput {
   appliances: Array<{
     deviceName: string;
     room: string;
-    applianceType: string;
+    // applianceType: string; // Removed
     powerRating?: number;
     estimatedDailyUsage: number;
     status: boolean;
@@ -40,7 +40,7 @@ export interface EnergyPredictionGenAIInput {
   appliances: Array<{
     deviceName: string;
     room: string;
-    applianceType: string;
+    // applianceType: string; // Removed
     powerRating?: number;
     estimatedDailyUsage: number;
     status: boolean;
@@ -64,7 +64,7 @@ export interface IntelligentRemindersGenAIInput {
   appliances: Array<{
     deviceName: string;
     room: string;
-    applianceType: string;
+    // applianceType: string; // Removed
     powerRating?: number;
     estimatedDailyUsage: number;
   }>;

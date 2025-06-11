@@ -19,7 +19,7 @@ const GenerateReminderRulesInputSchema = z.object({
       z.object({
         deviceName: z.string().describe('Name of the appliance (e.g., Geyser, AC, Fan).'),
         room: z.string().describe('Room where the appliance is located (e.g., Bedroom, Living Room).'),
-        applianceType: z.string().describe('Category/type of the appliance (e.g., Light, Fan, AC).'),
+        // applianceType: z.string().describe('Category/type of the appliance (e.g., Light, Fan, AC).'), // Removed
         powerRating: z.number().optional().describe('Power rating of the appliance in Watts (if known).'),
         estimatedDailyUsage: z
           .number()
@@ -40,7 +40,7 @@ const GenerateReminderRulesOutputSchema = z.object({
   reminderRules: z
     .array(
       z.object({
-        applianceName: z.string().describe('Name of the appliance for the reminder.'),
+        applianceName: z.string().describe('Name of the appliance for the reminder (should be the deviceName provided).'),
         rule: z.string().describe('The reminder rule (e.g., Turn off geyser after 30 minutes).'),
       })
     )
@@ -60,12 +60,13 @@ const prompt = ai.definePrompt({
   prompt: `You are an AI assistant that helps users save energy by generating intelligent reminder rules for their appliances.
 
   Based on the following appliance usage and energy goals, generate a list of reminder rules. These rules should help the user achieve their monthly electricity bill goal and be specific and actionable.
-  Tailor the reminder rules to the specific 'applianceType' and 'deviceName'. For example, a reminder for a 'Fan' (applianceType: {{applianceType}}, deviceName: {{deviceName}}) (e.g., "Turn off fan in {{room}} if unused") might be different from a reminder for an 'Oven' (e.g., "Don't forget to turn off the {{deviceName}} in the {{room}} after use.").
-  Consider common energy wasting scenarios for each 'applianceType' and create rules to address them. For instance, suggest turning off lights in unoccupied rooms, or not leaving entertainment devices (like TVs or Game Consoles) on standby for extended periods. If 'powerRating' is available, you can use it to emphasize high-consumption devices.
+  Tailor the reminder rules by inferring the type of appliance from its 'deviceName'. For example, a reminder for a device named "Living Room Fan" (e.g., "Turn off fan in {{room}} if unused") might be different from a reminder for a device named "Oven" (e.g., "Don't forget to turn off the {{{deviceName}}} in the {{room}} after use.").
+  Consider common energy wasting scenarios for each inferred appliance type and create rules to address them. For instance, suggest turning off lights (if 'deviceName' suggests a light) in unoccupied rooms, or not leaving entertainment devices (like TVs or Game Consoles, inferred from 'deviceName') on standby for extended periods. If 'powerRating' is available, you can use it to emphasize high-consumption devices.
+  The 'applianceName' in the output should be the 'deviceName' provided in the input.
 
   Appliances:
   {{#each appliances}}
-  - Device: {{deviceName}} (Type: {{applianceType}})
+  - Device: {{deviceName}}
     Room: {{room}}
     {{#if powerRating}}Power Rating: {{powerRating}} Watts{{/if}}
     Estimated Daily Usage: {{estimatedDailyUsage}} hours
@@ -74,7 +75,7 @@ const prompt = ai.definePrompt({
   Monthly Electricity Bill Goal: {{monthlyElectricityBillGoal}}
 
   Output the reminder rules in the format specified in the output schema.
-  Ensure each rule clearly mentions the appliance it pertains to (using deviceName or applianceType as appropriate).
+  Ensure each rule clearly mentions the appliance it pertains to (using 'deviceName').
   `,
 });
 

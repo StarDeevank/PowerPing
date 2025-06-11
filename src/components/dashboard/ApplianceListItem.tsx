@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import ApplianceIconRenderer from "@/components/icons/ApplianceIconRenderer";
-import { Trash2, Edit3, Zap } from "lucide-react"; // Added Zap for power rating
+import { Trash2, Edit3, Zap } from "lucide-react";
 
 interface ApplianceListItemProps {
   appliance: Appliance;
@@ -24,16 +24,16 @@ const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onTogg
     }
     onToggleStatus(appliance.id, checked);
   };
-  
+
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between">
       <div>
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
           <div className="flex items-center space-x-3">
-            <ApplianceIconRenderer deviceName={appliance.applianceType || appliance.deviceName} className="h-8 w-8 text-primary mt-1" />
+            <ApplianceIconRenderer deviceName={appliance.deviceName} className="h-8 w-8 text-primary mt-1" />
             <div>
               <CardTitle className="text-lg font-medium">{appliance.deviceName}</CardTitle>
-              <CardDescription className="text-xs text-muted-foreground">{appliance.applianceType}</CardDescription>
+              {/* CardDescription for applianceType removed */}
             </div>
           </div>
           <Switch
@@ -58,7 +58,7 @@ const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onTogg
           </p>
         </CardContent>
       </div>
-      <CardContent className="pt-0"> 
+      <CardContent className="pt-0">
         <div className="mt-auto flex space-x-2 pt-2 border-t border-border/50">
           <Button variant="outline" size="sm" onClick={() => onEdit(appliance)} aria-label={`Edit ${appliance.deviceName}`} disabled={isSleepModeActive}>
             <Edit3 className="h-4 w-4 mr-1" /> Edit

@@ -18,7 +18,7 @@ const PersonalizedTipsInputSchema = z.object({
       z.object({
         deviceName: z.string().describe('The name of the appliance.'),
         room: z.string().describe('The room where the appliance is located.'),
-        applianceType: z.string().describe('Category/type of the appliance (e.g., Light, Fan, AC).'),
+        // applianceType: z.string().describe('Category/type of the appliance (e.g., Light, Fan, AC).'), // Removed
         powerRating: z.number().optional().describe('Power rating of the appliance in Watts (if known).'),
         estimatedDailyUsage: z
           .number()
@@ -54,7 +54,7 @@ const prompt = ai.definePrompt({
 
 Appliances:
 {{#each appliances}}
-- Device Name: {{{deviceName}}} (Type: {{{applianceType}}})
+- Device Name: {{{deviceName}}}
   Room: {{{room}}}
   {{#if powerRating}}Power Rating: {{{powerRating}}} Watts{{/if}}
   Estimated Daily Usage: {{{estimatedDailyUsage}}} hours
@@ -64,8 +64,9 @@ Appliances:
 Monthly Electricity Bill Goal: {{{monthlyElectricityBillGoal}}}
 
 Generate a list of personalized energy-saving tips. These tips should be specific to the user's situation and actionable.
-Crucially, tailor your tips to the specific 'applianceType' and 'deviceName'. For example, if an 'Air Conditioner' ({{{applianceType}}}) is listed, provide advice for AC efficiency, like cleaning filters or using a programmable thermostat. If a 'Geyser/Water Heater' is listed with high usage, suggest tips relevant to water heating efficiency. If 'Light' or 'Lamp' are mentioned, suggest using LED bulbs or turning them off in unused rooms. If a 'powerRating' is provided, you can incorporate it into the tip (e.g., "Your {{{powerRating}}}W AC...").
-Avoid generic advice; make each tip relevant to one or more of the user's actual appliances and their usage patterns.
+Crucially, tailor your tips to the specific appliance by inferring its type from the 'deviceName'. For example, if 'deviceName' includes "Air Conditioner" or "AC", provide advice for AC efficiency, like cleaning filters or using a programmable thermostat. If 'deviceName' suggests a "Geyser" or "Water Heater" and it has high usage, suggest tips relevant to water heating efficiency. If 'deviceName' includes "Light" or "Lamp", suggest using LED bulbs or turning them off in unused rooms. If a 'powerRating' is provided, you can incorporate it into the tip (e.g., "Your {{{powerRating}}}W AC...").
+Avoid generic advice; make each tip relevant to one or more of the user's actual appliances by understanding the device from its name and usage patterns.
+If a device name is ambiguous (e.g., "My Gadget"), provide a more general tip related to its usage hours or power rating if available.
 
 Tips:
   `,

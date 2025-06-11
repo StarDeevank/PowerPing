@@ -18,7 +18,7 @@ const EnergyPredictionInputSchema = z.object({
       z.object({
         deviceName: z.string().describe('Name of the appliance.'),
         room: z.string().describe('Room where the appliance is located.'),
-        applianceType: z.string().describe('Category/type of the appliance (e.g., Light, Fan, AC).'),
+        // applianceType: z.string().describe('Category/type of the appliance (e.g., Light, Fan, AC).'), // Removed
         powerRating: z.number().optional().describe('Power rating of the appliance in Watts (if known).'),
         estimatedDailyUsage: z.number().describe('Estimated daily usage in hours.'),
         status: z.boolean().describe('Whether the appliance is currently on or off.'),
@@ -53,9 +53,9 @@ const prompt = ai.definePrompt({
 
 Appliances:
 {{#each appliances}}
-- Device: {{{deviceName}}} (Type: {{{applianceType}}})
+- Device: {{{deviceName}}}
   Room: {{{room}}}
-  {{#if powerRating}}Power Rating: {{{powerRating}}} Watts{{/if}}
+  {{#if powerRating}}Power Rating: {{{powerRating}}} Watts (Use this value for calculation if provided.){{else}}Power Rating: Not specified (Estimate based on device name and typical consumption patterns. Be conservative if unsure.){{/if}}
   Usage: {{{estimatedDailyUsage}}} hours
   Status: {{#if status}}On{{else}}Off{{/if}}
 {{/each}}
@@ -69,8 +69,14 @@ Based on this information, provide:
 - estimatedMonthlyCost ({{{currency}}})
 - isWithinGoal (true/false, based on whether the estimated monthly cost is within the monthlyElectricityBillGoal)
 
-Consider typical power ratings for common household appliances based on their 'applianceType' if 'powerRating' is not provided by the user. If 'powerRating' IS provided, prioritize that for calculations.
-Assume an average electricity cost of {{{currency}}}7/kWh for INR (₹) and {{{currency}}}0.15/kWh for USD ($) unless implicit from user's goal (though direct cost rates are more reliable for prediction than inferring from goal alone).
+Instructions for estimation:
+1.  If 'powerRating' IS provided by the user, prioritize that value for calculating energy consumption (Power in kW * Hours).
+2.  If 'powerRating' is NOT provided, infer the type of appliance from its 'deviceName' (e.g., "Living Room Fan", "Bedroom AC", "Study Lamp").
+3.  Based on the inferred type and typical power consumption for such appliances, estimate a power rating in Watts. Use common household appliance wattages (e.g., Fan: 50-75W, LED Light: 5-15W, AC: 1000-2000W, Refrigerator: 100-200W, TV: 50-150W). If the deviceName is ambiguous, use a conservative estimate or state if estimation is difficult.
+4.  Assume an average electricity cost of {{{currency}}}7/kWh for INR (₹) and {{{currency}}}0.15/kWh for USD ($).
+5.  Calculate daily energy usage (kWh) for each appliance and sum them up.
+6.  Calculate monthly energy usage (kWh) by multiplying daily usage by 30.
+7.  Calculate daily and monthly costs based on the total kWh and the assumed electricity cost.
 Ensure that the output is accurate and follows the specified units and currency.
 `,
 });
