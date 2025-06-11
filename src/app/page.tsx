@@ -92,7 +92,7 @@ export default function DashboardPage() {
   const currentDayKWhRef = useRef(currentDayKWh);
   const currentDayCostRef = useRef(currentDayCost);
   const usageSettingsRef = useRef(usageSettings);
-  const appliancesRef = useRef(appliances); // To ensure fetchAIData in sleep toggle gets latest
+  const appliancesRef = useRef(appliances);
   
   useEffect(() => { currentDayKWhRef.current = currentDayKWh; }, [currentDayKWh]);
   useEffect(() => { currentDayCostRef.current = currentDayCost; }, [currentDayCost]);
@@ -103,20 +103,66 @@ export default function DashboardPage() {
   // Load from localStorage
   useEffect(() => {
     const storedUsageSettings = localStorage.getItem('powerping_usageSettings');
-    if (storedUsageSettings) setUsageSettings(JSON.parse(storedUsageSettings));
-    const storedAppliances = localStorage.getItem('powerping_appliances');
-    if (storedAppliances) setAppliances(JSON.parse(storedAppliances));
-    const storedSleepMode = localStorage.getItem('powerping_sleepMode');
-    if (storedSleepMode) setIsSleepModeActive(JSON.parse(storedSleepMode));
+    if (storedUsageSettings) {
+        try {
+            const parsedSettings = JSON.parse(storedUsageSettings);
+            if (parsedSettings && typeof parsedSettings.monthlyElectricityBillGoal === 'number' && (parsedSettings.currency === '₹' || parsedSettings.currency === '$')) {
+                 setUsageSettings(parsedSettings);
+            }
+        } catch (e) { console.error("Error parsing usage settings from localStorage", e); }
+    }
 
+    const storedAppliances = localStorage.getItem('powerping_appliances');
+    if (storedAppliances) {
+        try {
+            const parsedAppliances = JSON.parse(storedAppliances);
+            if(Array.isArray(parsedAppliances)) {
+                setAppliances(parsedAppliances);
+            }
+        } catch (e) { console.error("Error parsing appliances from localStorage", e); }
+    }
+
+    const storedSleepMode = localStorage.getItem('powerping_sleepMode');
+    if (storedSleepMode) {
+        try {
+            setIsSleepModeActive(JSON.parse(storedSleepMode));
+        } catch (e) { console.error("Error parsing sleep mode from localStorage", e); }
+    }
+    
     const storedDailyRecords = localStorage.getItem('powerping_dailyRecords');
-    if (storedDailyRecords) setDailyRecords(JSON.parse(storedDailyRecords));
+    if (storedDailyRecords) {
+      try {
+        const parsedRecords = JSON.parse(storedDailyRecords);
+        if (typeof parsedRecords === 'object' && parsedRecords !== null) {
+          // Basic validation for records structure can be added here if needed
+          // e.g., check if each record has totalKWh, totalCost as numbers
+          setDailyRecords(parsedRecords);
+        } else {
+          console.warn("Loaded dailyRecords is not a valid object, defaulting to empty.");
+          setDailyRecords({});
+        }
+      } catch (e) {
+        console.error("Error parsing dailyRecords from localStorage", e);
+        setDailyRecords({});
+      }
+    }
 
     const todayKey = formatDateKey(new Date());
     const storedTodayKWh = localStorage.getItem(`powerping_currentDayKWh_${todayKey}`);
-    if (storedTodayKWh) setCurrentDayKWh(parseFloat(storedTodayKWh));
+    if (storedTodayKWh) {
+        const parsedKWh = parseFloat(storedTodayKWh);
+        setCurrentDayKWh(isNaN(parsedKWh) ? 0 : parsedKWh);
+    } else {
+        setCurrentDayKWh(0); // Ensure it's 0 if not found for today
+    }
+
     const storedTodayCost = localStorage.getItem(`powerping_currentDayCost_${todayKey}`);
-    if (storedTodayCost) setCurrentDayCost(parseFloat(storedTodayCost));
+    if (storedTodayCost) {
+        const parsedCost = parseFloat(storedTodayCost);
+        setCurrentDayCost(isNaN(parsedCost) ? 0 : parsedCost);
+    } else {
+        setCurrentDayCost(0); // Ensure it's 0 if not found for today
+    }
 
     setLastRolloverCheck(startOfDay(new Date()));
   }, []);
@@ -146,22 +192,22 @@ export default function DashboardPage() {
     }
 
     const commonInputBase = {
-      appliances: appliancesRef.current.map(a => ({ // Use ref here
+      appliances: appliancesRef.current.map(a => ({
         deviceName: a.deviceName,
         room: a.room,
         powerRating: a.powerRating,
         estimatedDailyUsage: a.estimatedDailyUsage,
         status: a.status
       })),
-      monthlyElectricityBillGoal: usageSettingsRef.current.monthlyElectricityBillGoal, // Use ref here
+      monthlyElectricityBillGoal: usageSettingsRef.current.monthlyElectricityBillGoal,
     };
 
     let allLoadedSuccessfully = true;
 
     setIsLoadingPrediction(true);
     try {
-      const predictionResult = await predictEnergyUsage({ ...commonInputBase, currency: usageSettingsRef.current.currency }); // Use ref here
-      setEnergyPrediction({...predictionResult, currency: usageSettingsRef.current.currency}); // Use ref here
+      const predictionResult = await predictEnergyUsage({ ...commonInputBase, currency: usageSettingsRef.current.currency });
+      setEnergyPrediction({...predictionResult, currency: usageSettingsRef.current.currency});
     } catch (error) {
       console.error("Error fetching energy prediction:", error);
       toast({ title: "AI Error", description: "Could not fetch energy prediction.", variant: "destructive" });
@@ -183,13 +229,13 @@ export default function DashboardPage() {
     setIsLoadingReminders(true);
     try {
       const remindersResult = await generateReminderRules({
-        appliances: appliancesRef.current.map(a => ({ // Use ref here
+        appliances: appliancesRef.current.map(a => ({
             deviceName: a.deviceName,
             room: a.room,
             powerRating: a.powerRating,
             estimatedDailyUsage: a.estimatedDailyUsage
         })),
-        monthlyElectricityBillGoal: usageSettingsRef.current.monthlyElectricityBillGoal, // Use ref here
+        monthlyElectricityBillGoal: usageSettingsRef.current.monthlyElectricityBillGoal,
       });
       setIntelligentReminders(remindersResult.reminderRules.map((rule, index) => ({ id: `reminder-${index}`, applianceName: rule.applianceName, rule: rule.rule })));
     } catch (error) {
@@ -203,9 +249,9 @@ export default function DashboardPage() {
         toast({ title: "AI Insights Updated", description: "Predictions, tips, and reminders are up to date." });
     }
 
-  }, [isSleepModeActive, toast]); // Removed appliances and usageSettings from deps, rely on refs
+  }, [isSleepModeActive, toast]);
 
-  useEffect(() => { fetchAIData(); }, [fetchAIData, appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency]); // Keep appliances and usageSettings here to trigger fetch on their change.
+  useEffect(() => { fetchAIData(); }, [fetchAIData, appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency]);
 
   // Midnight Rollover Check - Stabilized
   useEffect(() => {
@@ -240,7 +286,7 @@ export default function DashboardPage() {
     checkAndRollover(); 
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [lastRolloverCheck, toast]); // Dependencies are now stable or manage their own lifecycle for the interval's callback
+  }, [lastRolloverCheck, toast]);
 
 
   // Real-time wattage and current day accumulation
@@ -251,7 +297,6 @@ export default function DashboardPage() {
     }
     const interval = setInterval(() => {
       let totalWattage = 0;
-      // Access latest appliances via state directly for this interval, as it re-runs if appliances change
       appliances.forEach(app => {
         if (app.status) {
           const applianceSpecificWattage = getApplianceWattage(app);
@@ -268,7 +313,7 @@ export default function DashboardPage() {
         return updatedData.length > MAX_LIVE_GRAPH_POINTS ? updatedData.slice(-MAX_LIVE_GRAPH_POINTS) : updatedData;
       });
 
-      const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15; // Use ref here
+      const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15;
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
 
       setCurrentDayKWh(prev => prev + kWhForInterval);
@@ -276,7 +321,7 @@ export default function DashboardPage() {
 
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
-  }, [appliances, isSleepModeActive]); // Keep appliances and isSleepModeActive, as the interval logic directly depends on them. usageSettings.currency is now via ref.
+  }, [appliances, isSleepModeActive]);
 
 
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
@@ -321,7 +366,7 @@ export default function DashboardPage() {
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats continue, some controls may be limited." });
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal. AI insights will refresh." });
-      fetchAIData(); // Call fetchAIData which now uses refs for appliances/settings
+      fetchAIData();
     }
   };
 
@@ -334,12 +379,19 @@ export default function DashboardPage() {
     const currentYearValue = getYear(new Date());
 
     Object.entries(dailyRecords).forEach(([dateKey, record]) => {
-      const recordDate = parseISO(dateKey); 
-      if (getMonth(recordDate) === currentMonthValue && getYear(recordDate) === currentYearValue) {
-        total += record.totalCost;
+      // Ensure record and record.totalCost are valid before adding
+      if (record && typeof record.totalCost === 'number' && !isNaN(record.totalCost)) {
+        try {
+          const recordDate = parseISO(dateKey); 
+          if (getMonth(recordDate) === currentMonthValue && getYear(recordDate) === currentYearValue) {
+            total += record.totalCost;
+          }
+        } catch (e) {
+            console.error("Error parsing dateKey in displayedMonthlyCost:", dateKey, e);
+        }
       }
     });
-     return total + currentDayCost; // currentDayCost is state, correctly triggers re-calc
+     return total + (typeof currentDayCost === 'number' && !isNaN(currentDayCost) ? currentDayCost : 0);
   }, [dailyRecords, currentDayCost]);
 
 
@@ -555,9 +607,9 @@ export default function DashboardPage() {
                   <span className="text-muted-foreground">{usageSettings.currency}</span>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{usageSettings.currency}{currentDayCost.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">{usageSettings.currency}{(typeof currentDayCost === 'number' && !isNaN(currentDayCost) ? currentDayCost : 0).toFixed(2)}</div>
                    <p className="text-xs text-muted-foreground">
-                    {currentDayKWh.toFixed(2)} kWh accumulated today
+                    {(typeof currentDayKWh === 'number' && !isNaN(currentDayKWh) ? currentDayKWh : 0).toFixed(2)} kWh accumulated today
                   </p>
                 </CardContent>
               </Card>
@@ -646,4 +698,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+    
+
     
