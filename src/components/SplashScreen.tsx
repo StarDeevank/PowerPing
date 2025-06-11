@@ -12,7 +12,7 @@ interface SplashScreenProps {
 
 const FADE_DURATION_MS = 300; // Duration of fade-in/out animation
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onFinished, duration = 2500 }) => { // Increased duration for credits
+const SplashScreen: React.FC<SplashScreenProps> = ({ onFinished, duration = 1500 }) => { // Adjusted duration
   const [opacity, setOpacity] = useState(0); // Start fully transparent for fade-in
 
   useEffect(() => {
@@ -35,18 +35,12 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinished, duration = 2500
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-background text-center", // Added text-center
+        "fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-background",
         "transition-opacity ease-in-out"
       )}
       style={{ opacity: opacity, transitionDuration: `${FADE_DURATION_MS}ms` }}
     >
-      <PowerPingLogo className="h-20 w-auto mb-6 opacity-90" />
-      <div className="text-xs font-light text-muted-foreground tracking-wider space-y-1 px-4">
-        <p className="font-semibold text-sm text-foreground/90">🔖 Credits:</p>
-        <p>Concept and Design by Deevank, Class X-C</p>
-        <p>St. Joseph’s Sr. Sec. School, Sector 44D, Chandigarh</p>
-        <p>Created for Holiday Homework (AI Project) – 2025–26</p>
-      </div>
+      <PowerPingLogo className="h-20 w-auto opacity-90" />
     </div>
   );
 };
