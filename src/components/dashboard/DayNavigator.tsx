@@ -1,24 +1,27 @@
 
 "use client";
 
+// This component is no longer used.
+// File can be deleted. Keeping content for reference during this transaction only.
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { format, subDays, addDays, isToday, isFuture } from 'date-fns';
+import { Card, CardContent } from "@/components/ui/card"; 
 
 interface DayNavigatorProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
-  minDate?: Date; // Optional minimum date
+  minDate?: Date; 
 }
 
 const DayNavigator: React.FC<DayNavigatorProps> = ({ selectedDate, onDateChange, minDate }) => {
   const handlePreviousDay = () => {
     const newDate = subDays(selectedDate, 1);
     if (minDate && newDate < minDate) {
-      // Optionally disable button or handle as needed
       return;
     }
     onDateChange(newDate);
@@ -26,7 +29,7 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({ selectedDate, onDateChange,
 
   const handleNextDay = () => {
     const newDate = addDays(selectedDate, 1);
-    if (isFuture(newDate) && !isToday(newDate)) { // Prevent selecting future dates
+    if (isFuture(newDate) && !isToday(newDate)) { 
       return;
     }
     onDateChange(newDate);
@@ -71,10 +74,6 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({ selectedDate, onDateChange,
   );
 };
 
-// Need to import Card and CardContent for standalone component,
-// or ensure they are imported where DayNavigator is used if props are passed down.
-// For now, assuming they are available in the global scope from shadcn or similar.
-// If not, add:
-import { Card, CardContent } from "@/components/ui/card"; 
-
 export default DayNavigator;
+
+    

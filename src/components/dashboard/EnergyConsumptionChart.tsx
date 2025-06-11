@@ -17,25 +17,25 @@ const chartConfig = {
 
 interface EnergyConsumptionChartProps {
   dailyRecords: DailyRecords;
-  selectedDate: Date; // To determine the range of days to show
+  endDate: Date; // Renamed from selectedDate, always represents 'today' or the end of the period
   daysToShow?: number;
 }
 
-const EnergyConsumptionChart: React.FC<EnergyConsumptionChartProps> = ({ dailyRecords, selectedDate, daysToShow = 7 }) => {
+const EnergyConsumptionChart: React.FC<EnergyConsumptionChartProps> = ({ dailyRecords, endDate, daysToShow = 7 }) => {
   const chartData = React.useMemo(() => {
     const data = [];
     for (let i = 0; i < daysToShow; i++) {
-      const dateToFetch = subDays(selectedDate, i);
+      const dateToFetch = subDays(endDate, i);
       const dateKey = format(dateToFetch, 'yyyy-MM-dd');
       const record = dailyRecords[dateKey];
       data.push({
-        day: format(dateToFetch, 'MMM d'), // Format for X-axis label
-        shortDay: format(dateToFetch, 'EEE'), // For smaller screens if needed
-        consumption: record ? record.totalKWh : 0, // Default to 0 if no record
+        day: format(dateToFetch, 'MMM d'), 
+        shortDay: format(dateToFetch, 'EEE'), 
+        consumption: record ? record.totalKWh : 0, 
       });
     }
-    return data.reverse(); // Show earliest day first
-  }, [dailyRecords, selectedDate, daysToShow]);
+    return data.reverse(); 
+  }, [dailyRecords, endDate, daysToShow]);
 
   const noDataAvailable = chartData.every(d => d.consumption === 0);
 
@@ -44,7 +44,7 @@ const EnergyConsumptionChart: React.FC<EnergyConsumptionChartProps> = ({ dailyRe
       <CardHeader>
         <CardTitle>Energy Consumption History</CardTitle>
         <CardDescription>
-          Your daily energy usage for the last {daysToShow} recorded days ending on {format(selectedDate, 'MMM d, yyyy')}.
+          Your daily energy usage for the last {daysToShow} recorded days (ending today).
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -77,7 +77,7 @@ const EnergyConsumptionChart: React.FC<EnergyConsumptionChartProps> = ({ dailyRe
                 tickMargin={8}
                 tickFormatter={(value) => `${value.toFixed(1)} kWh`}
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                domain={[0, 'dataMax + 1']} // Ensure Y-axis starts at 0 and has some padding
+                domain={[0, 'dataMax + 1']} 
               />
               <Tooltip
                 cursor={{ fill: 'hsl(var(--accent) / 0.2)', radius: 'var(--radius)' }}
@@ -96,3 +96,5 @@ const EnergyConsumptionChart: React.FC<EnergyConsumptionChartProps> = ({ dailyRe
 };
 
 export default EnergyConsumptionChart;
+
+    

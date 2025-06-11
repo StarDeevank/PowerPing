@@ -15,7 +15,7 @@ import RealTimeFeedbackItem from '@/components/dashboard/RealTimeFeedbackItem';
 import SectionTitle from '@/components/common/SectionTitle';
 import EnergyConsumptionChart from '@/components/dashboard/EnergyConsumptionChart';
 import LiveWattageChart from '@/components/dashboard/LiveWattageChart';
-import DayNavigator from '@/components/dashboard/DayNavigator'; // New component
+// import DayNavigator from '@/components/dashboard/DayNavigator'; // Removed
 import type {
   Appliance, UsageSettings,
   EnergyPredictionData, DisplayIntelligentReminder, DisplayPersonalizedTip,
@@ -76,7 +76,7 @@ export default function DashboardPage() {
   const [isSleepModeActive, setIsSleepModeActive] = useState(false);
   
   // Real-time and daily tracking state
-  const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
+  // const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date())); // Removed
   const [dailyRecords, setDailyRecords] = useState<DailyRecords>({});
   
   const [currentDayKWh, setCurrentDayKWh] = useState(0); // Accumulates for the actual current day
@@ -100,14 +100,13 @@ export default function DashboardPage() {
     const storedDailyRecords = localStorage.getItem('powerping_dailyRecords');
     if (storedDailyRecords) setDailyRecords(JSON.parse(storedDailyRecords));
 
-    // Load today's accumulated KWh and Cost if app was closed and reopened on the same day
     const todayKey = formatDateKey(new Date());
     const storedTodayKWh = localStorage.getItem(`powerping_currentDayKWh_${todayKey}`);
     if (storedTodayKWh) setCurrentDayKWh(parseFloat(storedTodayKWh));
     const storedTodayCost = localStorage.getItem(`powerping_currentDayCost_${todayKey}`);
     if (storedTodayCost) setCurrentDayCost(parseFloat(storedTodayCost));
     
-    setLastRolloverCheck(startOfDay(new Date())); // Initialize with today's start
+    setLastRolloverCheck(startOfDay(new Date())); 
   }, []);
 
   // Save to localStorage
@@ -116,7 +115,6 @@ export default function DashboardPage() {
   useEffect(() => { localStorage.setItem('powerping_sleepMode', JSON.stringify(isSleepModeActive));}, [isSleepModeActive]);
   useEffect(() => { localStorage.setItem('powerping_dailyRecords', JSON.stringify(dailyRecords));}, [dailyRecords]);
 
-  // Save current day's accumulation to localStorage periodically
   useEffect(() => {
     const todayKey = formatDateKey(new Date());
     localStorage.setItem(`powerping_currentDayKWh_${todayKey}`, currentDayKWh.toString());
@@ -197,7 +195,7 @@ export default function DashboardPage() {
 
   }, [usageSettings, appliances, toast, isSleepModeActive]);
 
-  useEffect(() => { fetchAIData(); }, [appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency]); // Re-fetch AI data if core inputs change
+  useEffect(() => { fetchAIData(); }, [appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency]); 
 
   // Midnight Rollover Check
   useEffect(() => {
@@ -211,36 +209,34 @@ export default function DashboardPage() {
         setDailyRecords(prevRecords => ({
           ...prevRecords,
           [previousDayKey]: {
-            totalKWh: currentDayKWh, // This was yesterday's accumulation
-            totalCost: currentDayCost, // This was yesterday's accumulation
+            totalKWh: currentDayKWh, 
+            totalCost: currentDayCost, 
             currency: usageSettings.currency,
           }
         }));
         
         setCurrentDayKWh(0);
         setCurrentDayCost(0);
-        setLiveGraphData([]); // Optionally reset live graph for the new day
+        setLiveGraphData([]); 
         setTimeCounter(0);
         setLastRolloverCheck(startOfDay(now));
         toast({ title: "New Day Started", description: `Usage for ${format(previousDay, 'MMM d')} saved. Tracking for today.` });
         
-        // Clear previous day's accumulation from localStorage
         localStorage.removeItem(`powerping_currentDayKWh_${previousDayKey}`);
         localStorage.removeItem(`powerping_currentDayCost_${previousDayKey}`);
       }
     };
 
-    checkAndRollover(); // Initial check on mount or when lastRolloverCheck changes
+    checkAndRollover(); 
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [lastRolloverCheck, currentDayKWh, currentDayCost, usageSettings.currency]);
+  }, [lastRolloverCheck, currentDayKWh, currentDayCost, usageSettings.currency, toast]);
 
 
   // Real-time wattage and current day accumulation
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0); 
-        // Don't clear liveGraphData if sleep mode is temporary, allow resume
         return;
     }
     const interval = setInterval(() => {
@@ -260,7 +256,6 @@ export default function DashboardPage() {
         return newData.length > MAX_LIVE_GRAPH_POINTS ? newData.slice(-MAX_LIVE_GRAPH_POINTS) : newData;
       });
       
-      // Accumulate for the *actual current day*
       const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15; 
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
       
@@ -311,25 +306,15 @@ export default function DashboardPage() {
     const newSleepModeState = !isSleepModeActive;
     setIsSleepModeActive(newSleepModeState);
     if (newSleepModeState) {
-      // Data accumulation for currentDayKWh/Cost continues but AI insights and device controls might be limited.
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats continue, some controls may be limited." });
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal. AI insights will refresh." });
-      fetchAIData(); // Re-fetch AI data when waking up
+      fetchAIData(); 
     }
   };
   
   const isAIDataLoading = isLoadingPrediction || isLoadingTips || isLoadingReminders;
   const hasInitialSetup = appliances.length > 0;
-
-  // Data for display on "Live Stats" tab
-  const displayedDailyCost = useMemo(() => {
-    if (isSameDay(selectedDate, new Date())) {
-      return currentDayCost;
-    }
-    const record = dailyRecords[formatDateKey(selectedDate)];
-    return record ? record.totalCost : 0;
-  }, [selectedDate, currentDayCost, dailyRecords]);
 
   const displayedMonthlyCost = useMemo(() => {
     let total = 0;
@@ -342,21 +327,14 @@ export default function DashboardPage() {
         total += record.totalCost;
       }
     });
-    // Add current day's live cost if it's part of the current month (which it always should be if today)
-    if (getMonth(new Date()) === currentMonth && getYear(new Date()) === currentYearValue) {
-         // This logic ensures we don't double count if currentDayCost is already part of a saved record for today
-        // However, with midnight rollover, currentDayCost is for the *live* day.
-        // So, sum all *past* days of the month from dailyRecords, then add *live* currentDayCost.
-        // The filter above handles only past days for records.
-    }
-     return total + currentDayCost; // Add current day's live cost
+     return total + currentDayCost; 
   }, [dailyRecords, currentDayCost]);
 
 
   return (
     <div className="space-y-6 pt-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
-        <DayNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+      <div className="flex flex-col sm:flex-row justify-end items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+        {/* DayNavigator removed */}
         <div className="flex items-center space-x-2">
           <Button 
               variant="outline" 
@@ -475,17 +453,17 @@ export default function DashboardPage() {
           {hasInitialSetup && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                 {isSleepModeActive && !isSameDay(selectedDate, new Date()) ? ( // Show pause only if sleep AND viewing past day
+                 {isSleepModeActive ? ( 
                      <Card>
-                        <CardHeader><CardTitle>Historical Data View</CardTitle></CardHeader>
-                        <CardContent><p className="text-muted-foreground">You are viewing data for {format(selectedDate, 'MMM d, yyyy')}. Live features are paused for past dates or if sleep mode is active for today.</p></CardContent>
+                        <CardHeader><CardTitle>Real-Time Features Paused</CardTitle></CardHeader>
+                        <CardContent><p className="text-muted-foreground">Sleep mode is active. Some real-time dashboard features are paused.</p></CardContent>
                     </Card>
                  ) : (
                     <>
-                        <EnergyConsumptionChart dailyRecords={dailyRecords} selectedDate={selectedDate} />
+                        <EnergyConsumptionChart dailyRecords={dailyRecords} endDate={new Date()} />
                         <div>
-                        <SectionTitle>Real-Time Feedback (Today Only)</SectionTitle>
-                        {isSameDay(selectedDate, new Date()) && !isSleepModeActive ? (
+                        <SectionTitle>Real-Time Feedback</SectionTitle>
+                        {!isSleepModeActive ? (
                             appliances.some(app => app.status) ? (
                                 <div className="space-y-3">
                                 {appliances.filter(app => app.status).map(app => (
@@ -493,7 +471,7 @@ export default function DashboardPage() {
                                 ))}
                                 </div>
                             ) : <p className="text-muted-foreground">No appliances are currently active.</p>
-                        ) : <p className="text-muted-foreground">Real-time feedback is available for the current day when not in sleep mode.</p>}
+                        ) : <p className="text-muted-foreground">Real-time feedback is unavailable in sleep mode.</p>}
                         </div>
                     </>
                  )}
@@ -537,8 +515,8 @@ export default function DashboardPage() {
         </TabsContent>
 
         <TabsContent value="livestats">
-          <SectionTitle>Energy Statistics for {isSameDay(selectedDate, new Date()) ? 'Today' : format(selectedDate, 'MMM d, yyyy')}</SectionTitle>
-          {isSleepModeActive && isSameDay(selectedDate, new Date()) ? (
+          <SectionTitle>Energy Statistics</SectionTitle>
+          {isSleepModeActive ? (
              <Card>
                 <CardHeader><CardTitle>Live Stats Partially Paused</CardTitle></CardHeader>
                 <CardContent><p className="text-muted-foreground">Current Wattage may reflect sleep mode. Accumulated stats for today continue.</p></CardContent>
@@ -552,19 +530,19 @@ export default function DashboardPage() {
                   <Zap className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{isSameDay(selectedDate, new Date()) ? currentWattage : 'N/A'} W</div>
-                  <p className="text-xs text-muted-foreground">{isSameDay(selectedDate, new Date()) ? 'Real-time power draw' : 'Live for current day only'}</p>
+                  <div className="text-2xl font-bold">{currentWattage} W</div>
+                  <p className="text-xs text-muted-foreground">Real-time power draw</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Consumption ({isSameDay(selectedDate, new Date()) ? 'Today' : format(selectedDate, 'MMM d')})</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Consumption (Today)</CardTitle>
                   <span className="text-muted-foreground">{usageSettings.currency}</span>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{usageSettings.currency}{displayedDailyCost.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">{usageSettings.currency}{currentDayCost.toFixed(2)}</div>
                    <p className="text-xs text-muted-foreground">
-                    {(isSameDay(selectedDate, new Date()) ? currentDayKWh : (dailyRecords[formatDateKey(selectedDate)]?.totalKWh || 0)).toFixed(2)} kWh accumulated
+                    {currentDayKWh.toFixed(2)} kWh accumulated today
                   </p>
                 </CardContent>
               </Card>
@@ -578,13 +556,7 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground">Sum of recorded daily costs this month</p>
                 </CardContent>
               </Card>
-              {isSameDay(selectedDate, new Date()) && <LiveWattageChart data={liveGraphData} />}
-              {!isSameDay(selectedDate, new Date()) && 
-                <Card className="md:col-span-3">
-                    <CardHeader><CardTitle>Live Wattage Trend</CardTitle></CardHeader>
-                    <CardContent><p className="text-muted-foreground">Live wattage trend is only available for the current day.</p></CardContent>
-                </Card>
-              }
+              <LiveWattageChart data={liveGraphData} />
             </div>
           ) : (
              <Card>
@@ -659,3 +631,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
