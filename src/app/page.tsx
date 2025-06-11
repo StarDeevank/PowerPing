@@ -39,12 +39,10 @@ const MIDNIGHT_CHECK_INTERVAL = 60000; // 1 minute, to check for day change
 
 const getApplianceWattage = (appliance: Appliance): number => {
     if (appliance.powerRating && appliance.powerRating > 0) {
-      // Add a slight, realistic fluctuation (e.g., +/- 2.5% of powerRating)
       return appliance.powerRating + (Math.random() - 0.5) * (appliance.powerRating * 0.05);
     }
-    // Fallback to type-based estimation if powerRating is not provided
     const name = appliance.deviceName.toLowerCase();
-    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 15; // More stable estimate
+    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 15;
     if (name.includes('fan')) return 60;
     if (name.includes('ac') || name.includes('air conditioner')) return 1500;
     if (name.includes('fridge') || name.includes('refrigerator')) return 150;
@@ -53,7 +51,7 @@ const getApplianceWattage = (appliance: Appliance): number => {
     if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 100;
     if (name.includes('oven') || name.includes('microwave')) return 1100;
     if (name.includes('washer') || name.includes('washing machine')) return 400;
-    return 100; // Default generic appliance, more stable
+    return 100;
 };
 
 const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
@@ -98,7 +96,7 @@ export default function DashboardPage() {
   useEffect(() => {
     try {
         const storedUsageSettings = localStorage.getItem('powerping_usageSettings');
-        if (storedUsageSettings) {
+        if (storedUsageSettings && typeof storedUsageSettings === 'string' && storedUsageSettings.trim() !== "") {
             const parsedSettings = JSON.parse(storedUsageSettings);
             if (parsedSettings && typeof parsedSettings.monthlyElectricityBillGoal === 'number' && (parsedSettings.currency === '₹' || parsedSettings.currency === '$')) {
                  setUsageSettings(parsedSettings);
@@ -106,14 +104,17 @@ export default function DashboardPage() {
                 console.warn("Loaded usageSettings from localStorage has incorrect structure, defaulting.");
                 setUsageSettings(initialUsageSettings);
             }
+        } else if (storedUsageSettings === null || (typeof storedUsageSettings === 'string' && storedUsageSettings.trim() === "")){
+             setUsageSettings(initialUsageSettings);
         } else {
+             console.warn("Loaded 'powerping_usageSettings' is not a valid string or is empty, defaulting.");
              setUsageSettings(initialUsageSettings);
         }
     } catch (e) { console.error("Error parsing usage settings from localStorage", e); setUsageSettings(initialUsageSettings); }
 
     try {
         const storedAppliancesJSON = localStorage.getItem('powerping_appliances');
-        if (storedAppliancesJSON && typeof storedAppliancesJSON === 'string') { // Check if it's a string first
+        if (storedAppliancesJSON && typeof storedAppliancesJSON === 'string' && storedAppliancesJSON.trim() !== "") {
             const parsedAppliances = JSON.parse(storedAppliancesJSON);
             if (Array.isArray(parsedAppliances)) {
                 const validAppliances = parsedAppliances.filter(app =>
@@ -132,11 +133,10 @@ export default function DashboardPage() {
                 console.warn("Loaded 'powerping_appliances' (after parse) is not an array, defaulting to empty.");
                 setAppliances([]);
             }
-        } else if (storedAppliancesJSON === null) {
-            // No appliances stored, which is fine.
+        } else if (storedAppliancesJSON === null || (typeof storedAppliancesJSON === 'string' && storedAppliancesJSON.trim() === "")) {
             setAppliances([]);
         } else {
-            console.warn("Loaded 'powerping_appliances' is not a string or null, defaulting to empty.");
+            console.warn("Loaded 'powerping_appliances' is not a valid string or is empty, defaulting to empty.");
             setAppliances([]);
         }
     } catch (e) {
@@ -146,17 +146,20 @@ export default function DashboardPage() {
 
     try {
         const storedSleepMode = localStorage.getItem('powerping_sleepMode');
-        if (storedSleepMode) {
+        if (storedSleepMode && typeof storedSleepMode === 'string' && storedSleepMode.trim() !== "") {
              const parsedSleepMode = JSON.parse(storedSleepMode);
             setIsSleepModeActive(parsedSleepMode === true);
+        } else if (storedSleepMode === null || (typeof storedSleepMode === 'string' && storedSleepMode.trim() === "")) {
+            setIsSleepModeActive(false);
         } else {
+             console.warn("Loaded 'powerping_sleepMode' is not a valid string or is empty, defaulting.");
             setIsSleepModeActive(false);
         }
     } catch (e) { console.error("Error parsing sleep mode from localStorage", e); setIsSleepModeActive(false); }
 
     try {
         const storedDailyRecords = localStorage.getItem('powerping_dailyRecords');
-        if (storedDailyRecords) {
+        if (storedDailyRecords && typeof storedDailyRecords === 'string' && storedDailyRecords.trim() !== "") {
           const parsedRecords = JSON.parse(storedDailyRecords);
           if (typeof parsedRecords === 'object' && parsedRecords !== null && !Array.isArray(parsedRecords)) {
             setDailyRecords(parsedRecords);
@@ -164,7 +167,10 @@ export default function DashboardPage() {
             console.warn("Loaded dailyRecords from localStorage is not a valid object, defaulting to empty.");
             setDailyRecords({});
           }
+        } else if (storedDailyRecords === null || (typeof storedDailyRecords === 'string' && storedDailyRecords.trim() === "")){
+          setDailyRecords({});
         } else {
+          console.warn("Loaded 'powerping_dailyRecords' is not a valid string or is empty, defaulting to empty.");
           setDailyRecords({});
         }
     } catch (e) {
@@ -179,7 +185,7 @@ export default function DashboardPage() {
             const parsedKWh = parseFloat(storedTodayKWh);
             setCurrentDayKWh(isNaN(parsedKWh) ? 0 : parsedKWh);
         } else {
-            setCurrentDayKWh(0); // Default to 0 if not found
+            setCurrentDayKWh(0);
         }
     } catch(e) { console.error("Error loading currentDayKWh from localStorage", e); setCurrentDayKWh(0); }
 
@@ -189,7 +195,7 @@ export default function DashboardPage() {
             const parsedCost = parseFloat(storedTodayCost);
             setCurrentDayCost(isNaN(parsedCost) ? 0 : parsedCost);
         } else {
-            setCurrentDayCost(0); // Default to 0 if not found
+            setCurrentDayCost(0);
         }
     } catch(e) { console.error("Error loading currentDayCost from localStorage", e); setCurrentDayCost(0); }
 
@@ -310,16 +316,14 @@ export default function DashboardPage() {
         }
       }
     };
-    checkAndRollover(); // Check immediately on mount/dependency change
+    checkAndRollover();
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [lastRolloverCheck, toast]); // Removed currentDayKWh, currentDayCost, usageSettings from deps
+  }, [lastRolloverCheck, toast]);
 
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0);
-        // Potentially clear liveGraphData if sleep mode should also pause the graph visually
-        // setLiveGraphData([]);
         return;
     }
     const interval = setInterval(() => {
@@ -333,7 +337,6 @@ export default function DashboardPage() {
       const newCurrentWattage = parseFloat(totalWattage.toFixed(0));
       setCurrentWattage(newCurrentWattage);
 
-      // Use ref for timeCounter
       timeCounterRef.current += 1;
       setLiveGraphData(prevData => {
         const newDataPoint = { time: timeCounterRef.current, wattage: newCurrentWattage };
@@ -344,19 +347,18 @@ export default function DashboardPage() {
       const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15;
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
 
-      // Use functional updates to ensure we're working with the latest state
       setCurrentDayKWh(prev => {
           const newTotalKWh = prev + kWhForInterval;
-          return isNaN(newTotalKWh) ? prev : newTotalKWh; // Prevent NaN propagation
+          return isNaN(newTotalKWh) ? prev : newTotalKWh;
       });
       setCurrentDayCost(prev => {
           const newTotalCost = prev + (kWhForInterval * costPerKWh);
-          return isNaN(newTotalCost) ? prev : newTotalCost; // Prevent NaN propagation
+          return isNaN(newTotalCost) ? prev : newTotalCost;
       });
 
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
-  }, [isSleepModeActive]); // Dependencies: appliancesRef (via appliances), usageSettingsRef (via usageSettings), isSleepModeActive
+  }, [isSleepModeActive]);
 
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
 
@@ -400,7 +402,7 @@ export default function DashboardPage() {
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats continue, some controls may be limited." });
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal. AI insights will refresh." });
-      fetchAIData(); // Re-fetch AI data when sleep mode is deactivated
+      fetchAIData();
     }
   };
 
@@ -415,7 +417,7 @@ export default function DashboardPage() {
     Object.entries(dailyRecords).forEach(([dateKey, record]) => {
       if (record && typeof record.totalCost === 'number' && !isNaN(record.totalCost)) {
         try {
-          const recordDate = parseISO(dateKey); // Ensure dateKey is valid ISO
+          const recordDate = parseISO(dateKey);
           if (getMonth(recordDate) === currentMonthValue && getYear(recordDate) === currentYearValue) {
             total += record.totalCost;
           }
@@ -424,7 +426,6 @@ export default function DashboardPage() {
         }
       }
     });
-     // Ensure currentDayCost is a valid number before adding
      const currentCostValid = typeof currentDayCost === 'number' && !isNaN(currentDayCost) ? currentDayCost : 0;
      return total + currentCostValid;
   }, [dailyRecords, currentDayCost]);
