@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import PowerPingLogo from '@/components/icons/PowerPingLogo'; // Updated import
+import PowerPingLogo from '@/components/icons/PowerPingLogo';
 import { cn } from '@/lib/utils';
 
 interface SplashScreenProps {
@@ -12,22 +12,19 @@ interface SplashScreenProps {
 
 const FADE_DURATION_MS = 300; // Duration of fade-in/out animation
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onFinished, duration = 1000 }) => {
+const SplashScreen: React.FC<SplashScreenProps> = ({ onFinished, duration = 2500 }) => { // Increased duration for credits
   const [opacity, setOpacity] = useState(0); // Start fully transparent for fade-in
 
   useEffect(() => {
-    // Ensure fade-in transition occurs after initial mount
     const fadeInTimeout = setTimeout(() => {
       setOpacity(1);
-    }, 50); // Small delay to ensure CSS transition applies
+    }, 50); 
 
     const visibilityTimer = setTimeout(() => {
-      // Start fade-out
       setOpacity(0);
-      // Call onFinished after the fade-out animation completes
       const finishTimer = setTimeout(onFinished, FADE_DURATION_MS);
       return () => clearTimeout(finishTimer);
-    }, duration + 50); // Add fade-in delay to overall duration
+    }, duration + 50); 
 
     return () => {
       clearTimeout(fadeInTimeout);
@@ -38,15 +35,18 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinished, duration = 1000
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-background",
+        "fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-background text-center", // Added text-center
         "transition-opacity ease-in-out"
       )}
       style={{ opacity: opacity, transitionDuration: `${FADE_DURATION_MS}ms` }}
     >
       <PowerPingLogo className="h-20 w-auto mb-6 opacity-90" />
-      <p className="text-base font-light text-muted-foreground tracking-wider">
-        Made by Deevank
-      </p>
+      <div className="text-xs font-light text-muted-foreground tracking-wider space-y-1 px-4">
+        <p className="font-semibold text-sm text-foreground/90">🔖 Credits:</p>
+        <p>Concept and Design by Deevank, Class X-C</p>
+        <p>St. Joseph’s Sr. Sec. School, Sector 44D, Chandigarh</p>
+        <p>Created for Holiday Homework (AI Project) – 2025–26</p>
+      </div>
     </div>
   );
 };
