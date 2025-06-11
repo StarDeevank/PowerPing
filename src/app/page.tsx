@@ -39,19 +39,21 @@ const MIDNIGHT_CHECK_INTERVAL = 60000; // 1 minute, to check for day change
 
 const getApplianceWattage = (appliance: Appliance): number => {
     if (appliance.powerRating && appliance.powerRating > 0) {
+      // Add a slight, realistic fluctuation (e.g., +/- 2.5% of powerRating)
       return appliance.powerRating + (Math.random() - 0.5) * (appliance.powerRating * 0.05);
     }
+    // Fallback to type-based estimation if powerRating is not provided
     const name = appliance.deviceName.toLowerCase();
-    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 15; // 10-20W -> 15W
-    if (name.includes('fan')) return 60; // 50-75W -> 60W
-    if (name.includes('ac') || name.includes('air conditioner')) return 1500; // 1000-2000W -> 1500W
-    if (name.includes('fridge') || name.includes('refrigerator')) return 150; // 100-200W -> 150W
-    if (name.includes('tv') || name.includes('television')) return 100; // 50-150W -> 100W
-    if (name.includes('geyser') || name.includes('water heater')) return 2500; // 2000-3000W -> 2500W
-    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 100; // 75-150W -> 100W
-    if (name.includes('oven') || name.includes('microwave')) return 1100; // 800-1500W -> 1100W
-    if (name.includes('washer') || name.includes('washing machine')) return 400; // 300-500W -> 400W
-    return 100; // Default generic appliance: 75-125W -> 100W
+    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 15; // More stable estimate
+    if (name.includes('fan')) return 60;
+    if (name.includes('ac') || name.includes('air conditioner')) return 1500;
+    if (name.includes('fridge') || name.includes('refrigerator')) return 150;
+    if (name.includes('tv') || name.includes('television')) return 100;
+    if (name.includes('geyser') || name.includes('water heater')) return 2500;
+    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 100;
+    if (name.includes('oven') || name.includes('microwave')) return 1100;
+    if (name.includes('washer') || name.includes('washing machine')) return 400;
+    return 100; // Default generic appliance, more stable
 };
 
 const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
@@ -101,7 +103,7 @@ export default function DashboardPage() {
             if (parsedSettings && typeof parsedSettings.monthlyElectricityBillGoal === 'number' && (parsedSettings.currency === '₹' || parsedSettings.currency === '$')) {
                  setUsageSettings(parsedSettings);
             } else {
-                console.warn("Loaded usageSettings has incorrect structure, defaulting.");
+                console.warn("Loaded usageSettings from localStorage has incorrect structure, defaulting.");
                 setUsageSettings(initialUsageSettings);
             }
         } else {
@@ -111,10 +113,9 @@ export default function DashboardPage() {
 
     try {
         const storedAppliancesJSON = localStorage.getItem('powerping_appliances');
-        if (storedAppliancesJSON && typeof storedAppliancesJSON === 'string') {
+        if (storedAppliancesJSON && typeof storedAppliancesJSON === 'string') { // Check if it's a string first
             const parsedAppliances = JSON.parse(storedAppliancesJSON);
             if (Array.isArray(parsedAppliances)) {
-                // Basic validation for each appliance object
                 const validAppliances = parsedAppliances.filter(app =>
                     app && typeof app.id === 'string' &&
                     typeof app.deviceName === 'string' &&
@@ -123,30 +124,31 @@ export default function DashboardPage() {
                     typeof app.estimatedDailyUsage === 'number' &&
                     typeof app.status === 'boolean'
                 );
-
-                if (validAppliances.length === parsedAppliances.length) {
-                    setAppliances(validAppliances);
-                } else {
+                if (validAppliances.length !== parsedAppliances.length) {
                     console.warn("Some loaded appliances had invalid structure and were filtered out. Original count:", parsedAppliances.length, "Valid count:", validAppliances.length);
-                    setAppliances(validAppliances); // Set only the valid ones
                 }
+                setAppliances(validAppliances);
             } else {
                 console.warn("Loaded 'powerping_appliances' (after parse) is not an array, defaulting to empty.");
                 setAppliances([]);
             }
+        } else if (storedAppliancesJSON === null) {
+            // No appliances stored, which is fine.
+            setAppliances([]);
         } else {
-             // No appliances stored, or invalid format (not a string)
+            console.warn("Loaded 'powerping_appliances' is not a string or null, defaulting to empty.");
             setAppliances([]);
         }
     } catch (e) {
         console.error("Error parsing 'powerping_appliances' from localStorage:", e);
-        setAppliances([]); // Default to empty on error
+        setAppliances([]);
     }
 
     try {
         const storedSleepMode = localStorage.getItem('powerping_sleepMode');
         if (storedSleepMode) {
-            setIsSleepModeActive(JSON.parse(storedSleepMode) === true);
+             const parsedSleepMode = JSON.parse(storedSleepMode);
+            setIsSleepModeActive(parsedSleepMode === true);
         } else {
             setIsSleepModeActive(false);
         }
@@ -159,7 +161,7 @@ export default function DashboardPage() {
           if (typeof parsedRecords === 'object' && parsedRecords !== null && !Array.isArray(parsedRecords)) {
             setDailyRecords(parsedRecords);
           } else {
-            console.warn("Loaded dailyRecords is not a valid object, defaulting to empty.");
+            console.warn("Loaded dailyRecords from localStorage is not a valid object, defaulting to empty.");
             setDailyRecords({});
           }
         } else {
@@ -177,7 +179,7 @@ export default function DashboardPage() {
             const parsedKWh = parseFloat(storedTodayKWh);
             setCurrentDayKWh(isNaN(parsedKWh) ? 0 : parsedKWh);
         } else {
-            setCurrentDayKWh(0);
+            setCurrentDayKWh(0); // Default to 0 if not found
         }
     } catch(e) { console.error("Error loading currentDayKWh from localStorage", e); setCurrentDayKWh(0); }
 
@@ -187,7 +189,7 @@ export default function DashboardPage() {
             const parsedCost = parseFloat(storedTodayCost);
             setCurrentDayCost(isNaN(parsedCost) ? 0 : parsedCost);
         } else {
-            setCurrentDayCost(0);
+            setCurrentDayCost(0); // Default to 0 if not found
         }
     } catch(e) { console.error("Error loading currentDayCost from localStorage", e); setCurrentDayCost(0); }
 
@@ -283,7 +285,6 @@ export default function DashboardPage() {
         const previousDay = subDays(now, 1);
         const previousDayKey = formatDateKey(previousDay);
 
-        // Ensure values are numbers before saving
         const kwhToSave = typeof currentDayKWhRef.current === 'number' && !isNaN(currentDayKWhRef.current) ? currentDayKWhRef.current : 0;
         const costToSave = typeof currentDayCostRef.current === 'number' && !isNaN(currentDayCostRef.current) ? currentDayCostRef.current : 0;
 
@@ -309,14 +310,16 @@ export default function DashboardPage() {
         }
       }
     };
-    checkAndRollover();
+    checkAndRollover(); // Check immediately on mount/dependency change
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [lastRolloverCheck, toast]);
+  }, [lastRolloverCheck, toast]); // Removed currentDayKWh, currentDayCost, usageSettings from deps
 
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0);
+        // Potentially clear liveGraphData if sleep mode should also pause the graph visually
+        // setLiveGraphData([]);
         return;
     }
     const interval = setInterval(() => {
@@ -330,6 +333,7 @@ export default function DashboardPage() {
       const newCurrentWattage = parseFloat(totalWattage.toFixed(0));
       setCurrentWattage(newCurrentWattage);
 
+      // Use ref for timeCounter
       timeCounterRef.current += 1;
       setLiveGraphData(prevData => {
         const newDataPoint = { time: timeCounterRef.current, wattage: newCurrentWattage };
@@ -340,18 +344,19 @@ export default function DashboardPage() {
       const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15;
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
 
+      // Use functional updates to ensure we're working with the latest state
       setCurrentDayKWh(prev => {
           const newTotalKWh = prev + kWhForInterval;
-          return isNaN(newTotalKWh) ? 0 : newTotalKWh;
+          return isNaN(newTotalKWh) ? prev : newTotalKWh; // Prevent NaN propagation
       });
       setCurrentDayCost(prev => {
           const newTotalCost = prev + (kWhForInterval * costPerKWh);
-          return isNaN(newTotalCost) ? 0 : newTotalCost;
+          return isNaN(newTotalCost) ? prev : newTotalCost; // Prevent NaN propagation
       });
 
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
-  }, [isSleepModeActive]);
+  }, [isSleepModeActive]); // Dependencies: appliancesRef (via appliances), usageSettingsRef (via usageSettings), isSleepModeActive
 
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
 
@@ -395,7 +400,7 @@ export default function DashboardPage() {
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats continue, some controls may be limited." });
     } else {
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal. AI insights will refresh." });
-      fetchAIData();
+      fetchAIData(); // Re-fetch AI data when sleep mode is deactivated
     }
   };
 
@@ -410,7 +415,7 @@ export default function DashboardPage() {
     Object.entries(dailyRecords).forEach(([dateKey, record]) => {
       if (record && typeof record.totalCost === 'number' && !isNaN(record.totalCost)) {
         try {
-          const recordDate = parseISO(dateKey);
+          const recordDate = parseISO(dateKey); // Ensure dateKey is valid ISO
           if (getMonth(recordDate) === currentMonthValue && getYear(recordDate) === currentYearValue) {
             total += record.totalCost;
           }
@@ -419,6 +424,7 @@ export default function DashboardPage() {
         }
       }
     });
+     // Ensure currentDayCost is a valid number before adding
      const currentCostValid = typeof currentDayCost === 'number' && !isNaN(currentDayCost) ? currentDayCost : 0;
      return total + currentCostValid;
   }, [dailyRecords, currentDayCost]);
@@ -502,28 +508,28 @@ export default function DashboardPage() {
 
         <TabsContent value="dashboard">
           {!hasInitialSetup && !isSleepModeActive && (
-            <Card className="border-accent shadow-lg bg-muted text-center">
-              <CardHeader>
-                <Sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
-                <CardTitle className="text-2xl text-foreground">Welcome to PowerPing!</CardTitle>
-                <CardDescription className="text-base text-muted-foreground">
+            <Card className="rounded-xl shadow-2xl bg-card text-center">
+              <CardHeader className="p-6 md:p-8">
+                <Sparkles className="h-16 w-16 text-accent mx-auto mb-6" />
+                <CardTitle className="text-3xl font-bold text-foreground">Welcome to PowerPing!</CardTitle>
+                <CardDescription className="text-lg text-foreground/80 mt-2">
                   Let's get you set up to start saving energy.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground">
+              <CardContent className="space-y-6 p-6 md:p-8">
+                <p className="text-base text-foreground/70 px-4 sm:px-6">
                   To unlock personalized AI insights, please add your appliances.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
                   <Button
                     size="lg"
                     onClick={openAddApplianceForm}
-                    className="bg-accent text-accent-foreground hover:bg-accent/90"
+                    className="bg-accent text-accent-foreground hover:bg-accent/90 text-base py-3 px-6"
                   >
                     <PlusCircle className="mr-2 h-5 w-5" /> Add Your First Appliance
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground pt-2">
+                <p className="text-sm text-muted-foreground pt-2">
                   You can add more appliances and adjust usage settings later.
                 </p>
               </CardContent>
@@ -731,3 +737,5 @@ export default function DashboardPage() {
     
 
     
+
+      
