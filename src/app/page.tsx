@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,20 +40,22 @@ const MIDNIGHT_CHECK_INTERVAL = 60000; // 1 minute, to check for day change
 // Helper for wattage estimation
 const getApplianceWattage = (appliance: Appliance): number => {
     if (appliance.powerRating && appliance.powerRating > 0) {
-      return appliance.powerRating;
+      // Add a small fluctuation (+/- 2.5%) if powerRating is provided by user
+      return appliance.powerRating + (Math.random() - 0.5) * (appliance.powerRating * 0.05);
     }
+    // Infer from deviceName if powerRating is not provided, using more stable typical values
     const name = appliance.deviceName.toLowerCase();
-    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 10 + Math.random() * 10;
-    if (name.includes('fan')) return 50 + Math.random() * 25;
-    if (name.includes('ac') || name.includes('air conditioner')) return 1000 + Math.random() * 500;
-    if (name.includes('fridge') || name.includes('refrigerator')) return 100 + Math.random() * 100;
-    if (name.includes('tv') || name.includes('television')) return 60 + Math.random() * 90;
-    if (name.includes('geyser') || name.includes('water heater')) return 2000 + Math.random() * 1000;
-    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 50 + Math.random() * 100;
-    if (name.includes('oven') || name.includes('microwave')) return 800 + Math.random() * 400;
-    if (name.includes('washer') || name.includes('washing machine')) return 300 + Math.random() * 200;
+    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 15;
+    if (name.includes('fan')) return 60;
+    if (name.includes('ac') || name.includes('air conditioner')) return 1200;
+    if (name.includes('fridge') || name.includes('refrigerator')) return 150;
+    if (name.includes('tv') || name.includes('television')) return 100;
+    if (name.includes('geyser') || name.includes('water heater')) return 2500;
+    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 100;
+    if (name.includes('oven') || name.includes('microwave')) return 1000;
+    if (name.includes('washer') || name.includes('washing machine')) return 400;
 
-    return 75 + Math.random() * 75; // Default for unknown types
+    return 100; // Default for unknown types
 };
 
 const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
@@ -83,7 +85,7 @@ export default function DashboardPage() {
 
   const [currentWattage, setCurrentWattage] = useState(0);
   const [liveGraphData, setLiveGraphData] = useState<{ time: number; wattage: number }[]>([]);
-  const [timeCounter, setTimeCounter] = useState(0);
+  const timeCounterRef = useRef(0); // Use ref for timeCounter
   const [lastRolloverCheck, setLastRolloverCheck] = useState<Date>(startOfDay(new Date()));
 
 
@@ -136,7 +138,6 @@ export default function DashboardPage() {
       appliances: appliances.map(a => ({
         deviceName: a.deviceName,
         room: a.room,
-        // applianceType: a.applianceType, // Removed
         powerRating: a.powerRating,
         estimatedDailyUsage: a.estimatedDailyUsage,
         status: a.status
@@ -174,7 +175,6 @@ export default function DashboardPage() {
         appliances: appliances.map(a => ({
             deviceName: a.deviceName,
             room: a.room,
-            // applianceType: a.applianceType, // Removed
             powerRating: a.powerRating,
             estimatedDailyUsage: a.estimatedDailyUsage
         })),
@@ -194,7 +194,7 @@ export default function DashboardPage() {
 
   }, [usageSettings, appliances, toast, isSleepModeActive]);
 
-  useEffect(() => { fetchAIData(); }, [appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency, fetchAIData]); // Added fetchAIData to dependency array
+  useEffect(() => { fetchAIData(); }, [appliances, usageSettings.monthlyElectricityBillGoal, usageSettings.currency, fetchAIData]); 
 
   // Midnight Rollover Check
   useEffect(() => {
@@ -217,7 +217,7 @@ export default function DashboardPage() {
         setCurrentDayKWh(0);
         setCurrentDayCost(0);
         setLiveGraphData([]);
-        setTimeCounter(0);
+        timeCounterRef.current = 0; // Reset time counter for graph
         setLastRolloverCheck(startOfDay(now));
         toast({ title: "New Day Started", description: `Usage for ${format(previousDay, 'MMM d')} saved. Tracking for today.` });
 
@@ -226,7 +226,7 @@ export default function DashboardPage() {
       }
     };
 
-    checkAndRollover();
+    checkAndRollover(); // Initial check
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
   }, [lastRolloverCheck, currentDayKWh, currentDayCost, usageSettings.currency, toast]);
@@ -236,23 +236,26 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0);
+        // Optionally clear live graph data when sleep mode activates
+        // setLiveGraphData([]); 
         return;
     }
     const interval = setInterval(() => {
       let totalWattage = 0;
       appliances.forEach(app => {
         if (app.status) {
-          const baseWattage = getApplianceWattage(app);
-          totalWattage += baseWattage + (Math.random() * baseWattage * 0.1);
+          const applianceSpecificWattage = getApplianceWattage(app);
+          totalWattage += applianceSpecificWattage;
         }
       });
       const newCurrentWattage = parseFloat(totalWattage.toFixed(0));
       setCurrentWattage(newCurrentWattage);
 
-      setTimeCounter(prev => prev + 1);
+      timeCounterRef.current += 1;
       setLiveGraphData(prevData => {
-        const newData = [...prevData, { time: timeCounter, wattage: newCurrentWattage }];
-        return newData.length > MAX_LIVE_GRAPH_POINTS ? newData.slice(-MAX_LIVE_GRAPH_POINTS) : newData;
+        const newDataPoint = { time: timeCounterRef.current, wattage: newCurrentWattage };
+        const updatedData = [...prevData, newDataPoint];
+        return updatedData.length > MAX_LIVE_GRAPH_POINTS ? updatedData.slice(-MAX_LIVE_GRAPH_POINTS) : updatedData;
       });
 
       const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15;
@@ -263,7 +266,7 @@ export default function DashboardPage() {
 
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
-  }, [appliances, usageSettings.currency, isSleepModeActive, timeCounter]);
+  }, [appliances, usageSettings.currency, isSleepModeActive]); // Removed timeCounter from dependencies
 
 
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
@@ -317,12 +320,12 @@ export default function DashboardPage() {
 
   const displayedMonthlyCost = useMemo(() => {
     let total = 0;
-    const currentMonth = getMonth(new Date());
+    const currentMonthValue = getMonth(new Date());
     const currentYearValue = getYear(new Date());
 
     Object.entries(dailyRecords).forEach(([dateKey, record]) => {
-      const recordDate = parseISO(dateKey);
-      if (getMonth(recordDate) === currentMonth && getYear(recordDate) === currentYearValue) {
+      const recordDate = parseISO(dateKey); // Ensure dateKey is parsed correctly
+      if (getMonth(recordDate) === currentMonthValue && getYear(recordDate) === currentYearValue) {
         total += record.totalCost;
       }
     });
@@ -629,3 +632,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
