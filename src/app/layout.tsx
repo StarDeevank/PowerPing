@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import SiteHeader from '@/components/site-header';
+// import SiteHeader from '@/components/site-header'; // Removed import
 import AppInitializer from '@/components/AppInitializer'; // Import new component
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col bg-background">
         <AppInitializer>
-          <SiteHeader /> {/* This SiteHeader instance won't have sleep mode toggle from page.tsx */}
+          {/* <SiteHeader /> */} {/* SiteHeader component removed */}
           <main className="flex-grow container mx-auto p-4 md:p-6">
             {children}
           </main>
