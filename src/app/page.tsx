@@ -25,7 +25,7 @@ import { generatePersonalizedTips } from '@/ai/flows/personalized-tips';
 import { generateReminderRules } from '@/ai/flows/intelligent-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
+import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw, Sparkles, School, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -305,10 +305,10 @@ export default function DashboardPage() {
 
         <TabsContent value="dashboard">
           {!hasInitialSetup && !isSleepModeActive && (
-            <Card className="border-accent shadow-lg">
+            <Card className="border-accent shadow-lg bg-muted">
               <CardHeader className="text-center">
                 <Sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
-                <CardTitle className="text-2xl">Welcome to PowerPing!</CardTitle>
+                <CardTitle className="text-2xl text-foreground">Welcome to WattWatcher AI!</CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
                   Let's get you set up to start saving energy and money.
                 </CardDescription>
@@ -321,7 +321,7 @@ export default function DashboardPage() {
                   <Button 
                     size="lg" 
                     onClick={() => setIsHomeConfigDialogOpen(true)}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     <Home className="mr-2 h-5 w-5" /> Configure Your Home
                   </Button>
@@ -513,6 +513,18 @@ export default function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <BookOpen className="mr-3 h-5 w-5 text-primary" /> Credits
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground space-y-1">
+                <p><span className="font-medium text-foreground">Concept and Design by:</span> Deevank, Class X-C</p>
+                <p><span className="font-medium text-foreground">School:</span> St. Joseph’s Sr. Sec. School, Sector 44D, Chandigarh</p>
+                <p><span className="font-medium text-foreground">Project:</span> Created for Holiday Homework (AI Project) – 2025–26</p>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
@@ -522,3 +534,4 @@ export default function DashboardPage() {
     
 
     
+
