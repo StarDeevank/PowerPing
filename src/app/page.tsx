@@ -39,21 +39,19 @@ const MIDNIGHT_CHECK_INTERVAL = 60000; // 1 minute, to check for day change
 
 const getApplianceWattage = (appliance: Appliance): number => {
     if (appliance.powerRating && appliance.powerRating > 0) {
-      // Add a small realistic fluctuation (+/- 2.5% of powerRating)
       return appliance.powerRating + (Math.random() - 0.5) * (appliance.powerRating * 0.05);
     }
-    // Fallback estimation based on device name (more stable values)
     const name = appliance.deviceName.toLowerCase();
-    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 10 + Math.random() * 10; // 10-20W
-    if (name.includes('fan')) return 50 + Math.random() * 25; // 50-75W
-    if (name.includes('ac') || name.includes('air conditioner')) return 1000 + Math.random() * 1000; // 1000-2000W
-    if (name.includes('fridge') || name.includes('refrigerator')) return 100 + Math.random() * 100; // 100-200W (running state)
-    if (name.includes('tv') || name.includes('television')) return 50 + Math.random() * 100; // 50-150W
-    if (name.includes('geyser') || name.includes('water heater')) return 2000 + Math.random() * 1000; // 2000-3000W
-    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 75 + Math.random() * 75; // 75-150W
-    if (name.includes('oven') || name.includes('microwave')) return 800 + Math.random() * 700; // 800-1500W
-    if (name.includes('washer') || name.includes('washing machine')) return 300 + Math.random() * 200; // 300-500W
-    return 75 + Math.random() * 50; // Default generic appliance: 75-125W
+    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 15; // 10-20W -> 15W
+    if (name.includes('fan')) return 60; // 50-75W -> 60W
+    if (name.includes('ac') || name.includes('air conditioner')) return 1500; // 1000-2000W -> 1500W
+    if (name.includes('fridge') || name.includes('refrigerator')) return 150; // 100-200W -> 150W
+    if (name.includes('tv') || name.includes('television')) return 100; // 50-150W -> 100W
+    if (name.includes('geyser') || name.includes('water heater')) return 2500; // 2000-3000W -> 2500W
+    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 100; // 75-150W -> 100W
+    if (name.includes('oven') || name.includes('microwave')) return 1100; // 800-1500W -> 1100W
+    if (name.includes('washer') || name.includes('washing machine')) return 400; // 300-500W -> 400W
+    return 100; // Default generic appliance: 75-125W -> 100W
 };
 
 const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
@@ -89,7 +87,7 @@ export default function DashboardPage() {
   const currentDayCostRef = useRef(currentDayCost);
   const usageSettingsRef = useRef(usageSettings);
   const appliancesRef = useRef(appliances);
-  
+
   useEffect(() => { currentDayKWhRef.current = currentDayKWh; }, [currentDayKWh]);
   useEffect(() => { currentDayCostRef.current = currentDayCost; }, [currentDayCost]);
   useEffect(() => { usageSettingsRef.current = usageSettings; }, [usageSettings]);
@@ -104,7 +102,7 @@ export default function DashboardPage() {
                  setUsageSettings(parsedSettings);
             } else {
                 console.warn("Loaded usageSettings has incorrect structure, defaulting.");
-                setUsageSettings(initialUsageSettings); 
+                setUsageSettings(initialUsageSettings);
             }
         } else {
              setUsageSettings(initialUsageSettings);
@@ -112,19 +110,38 @@ export default function DashboardPage() {
     } catch (e) { console.error("Error parsing usage settings from localStorage", e); setUsageSettings(initialUsageSettings); }
 
     try {
-        const storedAppliances = localStorage.getItem('powerping_appliances');
-        if (storedAppliances) {
-            const parsedAppliances = JSON.parse(storedAppliances);
-            if(Array.isArray(parsedAppliances)) { 
-                setAppliances(parsedAppliances);
+        const storedAppliancesJSON = localStorage.getItem('powerping_appliances');
+        if (storedAppliancesJSON && typeof storedAppliancesJSON === 'string') {
+            const parsedAppliances = JSON.parse(storedAppliancesJSON);
+            if (Array.isArray(parsedAppliances)) {
+                // Basic validation for each appliance object
+                const validAppliances = parsedAppliances.filter(app =>
+                    app && typeof app.id === 'string' &&
+                    typeof app.deviceName === 'string' &&
+                    typeof app.room === 'string' &&
+                    (app.powerRating === undefined || typeof app.powerRating === 'number') &&
+                    typeof app.estimatedDailyUsage === 'number' &&
+                    typeof app.status === 'boolean'
+                );
+
+                if (validAppliances.length === parsedAppliances.length) {
+                    setAppliances(validAppliances);
+                } else {
+                    console.warn("Some loaded appliances had invalid structure and were filtered out. Original count:", parsedAppliances.length, "Valid count:", validAppliances.length);
+                    setAppliances(validAppliances); // Set only the valid ones
+                }
             } else {
-                console.warn("Loaded appliances is not an array, defaulting to empty.");
+                console.warn("Loaded 'powerping_appliances' (after parse) is not an array, defaulting to empty.");
                 setAppliances([]);
             }
         } else {
+             // No appliances stored, or invalid format (not a string)
             setAppliances([]);
         }
-    } catch (e) { console.error("Error parsing appliances from localStorage", e); setAppliances([]);}
+    } catch (e) {
+        console.error("Error parsing 'powerping_appliances' from localStorage:", e);
+        setAppliances([]); // Default to empty on error
+    }
 
     try {
         const storedSleepMode = localStorage.getItem('powerping_sleepMode');
@@ -134,12 +151,12 @@ export default function DashboardPage() {
             setIsSleepModeActive(false);
         }
     } catch (e) { console.error("Error parsing sleep mode from localStorage", e); setIsSleepModeActive(false); }
-    
+
     try {
         const storedDailyRecords = localStorage.getItem('powerping_dailyRecords');
         if (storedDailyRecords) {
           const parsedRecords = JSON.parse(storedDailyRecords);
-          if (typeof parsedRecords === 'object' && parsedRecords !== null && !Array.isArray(parsedRecords)) { 
+          if (typeof parsedRecords === 'object' && parsedRecords !== null && !Array.isArray(parsedRecords)) {
             setDailyRecords(parsedRecords);
           } else {
             console.warn("Loaded dailyRecords is not a valid object, defaulting to empty.");
@@ -173,7 +190,7 @@ export default function DashboardPage() {
             setCurrentDayCost(0);
         }
     } catch(e) { console.error("Error loading currentDayCost from localStorage", e); setCurrentDayCost(0); }
-    
+
     setLastRolloverCheck(startOfDay(new Date()));
   }, []);
 
@@ -265,11 +282,16 @@ export default function DashboardPage() {
         console.log("Midnight rollover detected. Saving previous day's data (using refs).");
         const previousDay = subDays(now, 1);
         const previousDayKey = formatDateKey(previousDay);
+
+        // Ensure values are numbers before saving
+        const kwhToSave = typeof currentDayKWhRef.current === 'number' && !isNaN(currentDayKWhRef.current) ? currentDayKWhRef.current : 0;
+        const costToSave = typeof currentDayCostRef.current === 'number' && !isNaN(currentDayCostRef.current) ? currentDayCostRef.current : 0;
+
         setDailyRecords(prevRecords => ({
           ...prevRecords,
           [previousDayKey]: {
-            totalKWh: currentDayKWhRef.current,
-            totalCost: currentDayCostRef.current,
+            totalKWh: kwhToSave,
+            totalCost: costToSave,
             currency: usageSettingsRef.current.currency,
           }
         }));
@@ -287,7 +309,7 @@ export default function DashboardPage() {
         }
       }
     };
-    checkAndRollover(); 
+    checkAndRollover();
     const intervalId = setInterval(checkAndRollover, MIDNIGHT_CHECK_INTERVAL);
     return () => clearInterval(intervalId);
   }, [lastRolloverCheck, toast]);
@@ -317,7 +339,7 @@ export default function DashboardPage() {
 
       const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15;
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
-      
+
       setCurrentDayKWh(prev => {
           const newTotalKWh = prev + kWhForInterval;
           return isNaN(newTotalKWh) ? 0 : newTotalKWh;
@@ -384,10 +406,11 @@ export default function DashboardPage() {
     let total = 0;
     const currentMonthValue = getMonth(new Date());
     const currentYearValue = getYear(new Date());
+
     Object.entries(dailyRecords).forEach(([dateKey, record]) => {
       if (record && typeof record.totalCost === 'number' && !isNaN(record.totalCost)) {
         try {
-          const recordDate = parseISO(dateKey); 
+          const recordDate = parseISO(dateKey);
           if (getMonth(recordDate) === currentMonthValue && getYear(recordDate) === currentYearValue) {
             total += record.totalCost;
           }
@@ -449,7 +472,7 @@ export default function DashboardPage() {
       )}
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="flex w-full overflow-x-auto whitespace-nowrap p-1 mb-6 bg-muted text-muted-foreground rounded-md">
+        <TabsList className="flex overflow-x-auto whitespace-nowrap p-1 mb-6 text-muted-foreground rounded-lg border border-border shadow-sm">
           <TabsTrigger value="dashboard" className="px-3 py-1.5">
             <BarChart2 className="h-4 w-4 md:mr-2"/>
             <span className="hidden md:inline">Dashboard</span>
@@ -528,10 +551,10 @@ export default function DashboardPage() {
                     </Card>
                  ) : (
                     <>
-                        <EnergyConsumptionChart 
-                          dailyRecords={dailyRecords} 
-                          endDate={new Date()} 
-                          currentDayKWh={currentDayKWh} 
+                        <EnergyConsumptionChart
+                          dailyRecords={dailyRecords}
+                          endDate={new Date()}
+                          currentDayKWh={currentDayKWh}
                         />
                         <div>
                         <SectionTitle>Real-Time Feedback</SectionTitle>
@@ -703,6 +726,8 @@ export default function DashboardPage() {
     </div>
   );
 }
+    
+
     
 
     
