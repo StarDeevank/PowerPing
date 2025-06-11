@@ -33,7 +33,6 @@ const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onTogg
             <ApplianceIconRenderer deviceName={appliance.deviceName} className="h-8 w-8 text-primary mt-1" />
             <div>
               <CardTitle className="text-lg font-medium">{appliance.deviceName}</CardTitle>
-              {/* CardDescription for applianceType removed */}
             </div>
           </div>
           <Switch
@@ -60,10 +59,10 @@ const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onTogg
       </div>
       <CardContent className="pt-0">
         <div className="mt-auto flex space-x-2 pt-2 border-t border-border/50">
-          <Button variant="outline" size="sm" onClick={() => onEdit(appliance)} aria-label={`Edit ${appliance.deviceName}`} disabled={isSleepModeActive}>
+          <Button variant="outline" onClick={() => onEdit(appliance)} aria-label={`Edit ${appliance.deviceName}`} disabled={isSleepModeActive}>
             <Edit3 className="h-4 w-4 mr-1" /> Edit
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => onDelete(appliance.id)} aria-label={`Delete ${appliance.deviceName}`} disabled={isSleepModeActive}>
+          <Button variant="destructive" onClick={() => onDelete(appliance.id)} aria-label={`Delete ${appliance.deviceName}`} disabled={isSleepModeActive}>
             <Trash2 className="h-4 w-4 mr-1" /> Delete
           </Button>
         </div>
@@ -73,3 +72,4 @@ const ApplianceListItem: React.FC<ApplianceListItemProps> = ({ appliance, onTogg
 };
 
 export default ApplianceListItem;
+

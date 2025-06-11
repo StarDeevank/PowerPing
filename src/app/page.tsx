@@ -39,19 +39,21 @@ const MIDNIGHT_CHECK_INTERVAL = 60000; // 1 minute, to check for day change
 
 const getApplianceWattage = (appliance: Appliance): number => {
     if (appliance.powerRating && appliance.powerRating > 0) {
+      // Add a small realistic fluctuation (+/- 2.5% of powerRating)
       return appliance.powerRating + (Math.random() - 0.5) * (appliance.powerRating * 0.05);
     }
+    // Fallback estimation based on device name (more stable values)
     const name = appliance.deviceName.toLowerCase();
-    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 15;
-    if (name.includes('fan')) return 60;
-    if (name.includes('ac') || name.includes('air conditioner')) return 1200;
-    if (name.includes('fridge') || name.includes('refrigerator')) return 150;
-    if (name.includes('tv') || name.includes('television')) return 100;
-    if (name.includes('geyser') || name.includes('water heater')) return 2500;
-    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 100;
-    if (name.includes('oven') || name.includes('microwave')) return 1000;
-    if (name.includes('washer') || name.includes('washing machine')) return 400;
-    return 100; 
+    if (name.includes('light') || name.includes('lamp') || name.includes('led')) return 10 + Math.random() * 10; // 10-20W
+    if (name.includes('fan')) return 50 + Math.random() * 25; // 50-75W
+    if (name.includes('ac') || name.includes('air conditioner')) return 1000 + Math.random() * 1000; // 1000-2000W
+    if (name.includes('fridge') || name.includes('refrigerator')) return 100 + Math.random() * 100; // 100-200W (running state)
+    if (name.includes('tv') || name.includes('television')) return 50 + Math.random() * 100; // 50-150W
+    if (name.includes('geyser') || name.includes('water heater')) return 2000 + Math.random() * 1000; // 2000-3000W
+    if (name.includes('computer') || name.includes('laptop') || name.includes('pc')) return 75 + Math.random() * 75; // 75-150W
+    if (name.includes('oven') || name.includes('microwave')) return 800 + Math.random() * 700; // 800-1500W
+    if (name.includes('washer') || name.includes('washing machine')) return 300 + Math.random() * 200; // 300-500W
+    return 75 + Math.random() * 50; // Default generic appliance: 75-125W
 };
 
 const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd');
@@ -94,49 +96,51 @@ export default function DashboardPage() {
   useEffect(() => { appliancesRef.current = appliances; }, [appliances]);
 
   useEffect(() => {
-    const storedUsageSettings = localStorage.getItem('powerping_usageSettings');
-    if (storedUsageSettings) {
-        try {
+    try {
+        const storedUsageSettings = localStorage.getItem('powerping_usageSettings');
+        if (storedUsageSettings) {
             const parsedSettings = JSON.parse(storedUsageSettings);
             if (parsedSettings && typeof parsedSettings.monthlyElectricityBillGoal === 'number' && (parsedSettings.currency === '₹' || parsedSettings.currency === '$')) {
                  setUsageSettings(parsedSettings);
+            } else {
+                setUsageSettings(initialUsageSettings); // Fallback to initial if structure is wrong
             }
-        } catch (e) { console.error("Error parsing usage settings from localStorage", e); }
-    }
+        }
+    } catch (e) { console.error("Error parsing usage settings from localStorage", e); setUsageSettings(initialUsageSettings); }
 
-    const storedAppliances = localStorage.getItem('powerping_appliances');
-    if (storedAppliances) {
-        try {
+    try {
+        const storedAppliances = localStorage.getItem('powerping_appliances');
+        if (storedAppliances) {
             const parsedAppliances = JSON.parse(storedAppliances);
-            if(Array.isArray(parsedAppliances)) {
+            if(Array.isArray(parsedAppliances)) { // Basic check, ideally validate schema
                 setAppliances(parsedAppliances);
             }
-        } catch (e) { console.error("Error parsing appliances from localStorage", e); }
-    }
+        }
+    } catch (e) { console.error("Error parsing appliances from localStorage", e); }
 
-    const storedSleepMode = localStorage.getItem('powerping_sleepMode');
-    if (storedSleepMode) {
-        try {
-            setIsSleepModeActive(JSON.parse(storedSleepMode));
-        } catch (e) { console.error("Error parsing sleep mode from localStorage", e); }
-    }
+    try {
+        const storedSleepMode = localStorage.getItem('powerping_sleepMode');
+        if (storedSleepMode) {
+            setIsSleepModeActive(JSON.parse(storedSleepMode) === true); // Ensure boolean
+        }
+    } catch (e) { console.error("Error parsing sleep mode from localStorage", e); }
     
-    const storedDailyRecords = localStorage.getItem('powerping_dailyRecords');
-    if (storedDailyRecords) {
-      try {
-        const parsedRecords = JSON.parse(storedDailyRecords);
-        if (typeof parsedRecords === 'object' && parsedRecords !== null) {
-          setDailyRecords(parsedRecords);
+    try {
+        const storedDailyRecords = localStorage.getItem('powerping_dailyRecords');
+        if (storedDailyRecords) {
+          const parsedRecords = JSON.parse(storedDailyRecords);
+          if (typeof parsedRecords === 'object' && parsedRecords !== null && !Array.isArray(parsedRecords)) { // Check it's a record object
+            setDailyRecords(parsedRecords);
+          } else {
+            console.warn("Loaded dailyRecords is not a valid object, defaulting to empty.");
+            setDailyRecords({});
+          }
         } else {
-          console.warn("Loaded dailyRecords is not a valid object, defaulting to empty.");
           setDailyRecords({});
         }
-      } catch (e) {
+    } catch (e) {
         console.error("Error parsing dailyRecords from localStorage", e);
         setDailyRecords({});
-      }
-    } else {
-      setDailyRecords({});
     }
 
     const todayKey = formatDateKey(new Date());
@@ -276,11 +280,14 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isSleepModeActive) {
         setCurrentWattage(0);
+        // Potentially clear liveGraphData if sleep mode means no wattage updates
+        // setLiveGraphData([]); 
+        // timeCounterRef.current = 0;
         return;
     }
     const interval = setInterval(() => {
       let totalWattage = 0;
-      appliancesRef.current.forEach(app => { // Use ref here
+      appliancesRef.current.forEach(app => {
         if (app.status) {
           const applianceSpecificWattage = getApplianceWattage(app);
           totalWattage += applianceSpecificWattage;
@@ -296,13 +303,13 @@ export default function DashboardPage() {
         return updatedData.length > MAX_LIVE_GRAPH_POINTS ? updatedData.slice(-MAX_LIVE_GRAPH_POINTS) : updatedData;
       });
 
-      const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15; // Use ref
+      const costPerKWh = usageSettingsRef.current.currency === '₹' ? 7 : 0.15;
       const kWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60));
       setCurrentDayKWh(prev => prev + kWhForInterval);
       setCurrentDayCost(prev => prev + (kWhForInterval * costPerKWh));
     }, REALTIME_UPDATE_INTERVAL);
     return () => clearInterval(interval);
-  }, [isSleepModeActive]); // Dependencies: isSleepModeActive. appliancesRef and usageSettingsRef are stable.
+  }, [isSleepModeActive]);
 
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
 
@@ -315,7 +322,6 @@ export default function DashboardPage() {
         id: Date.now().toString(),
         ...data,
         powerRating: data.powerRating ? Number(data.powerRating) : undefined,
-        // applianceType is removed
       };
       setAppliances([...appliances, newAppliance]);
       toast({ title: "Success", description: "Appliance added!" });
@@ -384,7 +390,7 @@ export default function DashboardPage() {
               disabled={isSleepModeActive || isAIDataLoading || !hasInitialSetup}
               aria-label="Refresh AI Data"
             >
-              <RefreshCw className={`h-4 w-4 sm:mr-2 ${isAIDataLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${isAIDataLoading ? 'animate-spin' : ''} sm:mr-2`} />
               <span className="hidden sm:inline">Refresh AI</span>
             </Button>
           <Button variant="outline" size="sm" onClick={handleToggleSleepMode} aria-label={isSleepModeActive ? "Deactivate Sleep Mode" : "Activate Sleep Mode"}>
@@ -426,7 +432,7 @@ export default function DashboardPage() {
           <TabsTrigger value="dashboard" className="flex-1 sm:flex-initial">
             <BarChart2 className="h-4 w-4 sm:mr-2"/>
             <span className="hidden sm:inline">Dashboard</span>
-             <span className="sm:hidden">Dash</span>
+            <span className="sm:hidden">Dash</span>
           </TabsTrigger>
           <TabsTrigger value="appliances" className="flex-1 sm:flex-initial">
             <Zap className="h-4 w-4 sm:mr-2"/>
@@ -436,31 +442,31 @@ export default function DashboardPage() {
           <TabsTrigger value="livestats" className="flex-1 sm:flex-initial">
             <AlertCircle className="h-4 w-4 sm:mr-2"/>
             <span className="hidden sm:inline">Live Stats</span>
-             <span className="sm:hidden">Live</span>
+            <span className="sm:hidden">Live</span>
           </TabsTrigger>
           <TabsTrigger value="insights" className="flex-1 sm:flex-initial">
             <Lightbulb className="h-4 w-4 sm:mr-2"/>
             <span className="hidden sm:inline">Insights</span>
-             <span className="sm:hidden">AI</span>
+            <span className="sm:hidden">AI</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex-1 sm:flex-initial col-span-2 sm:col-span-1">
             <Settings className="h-4 w-4 sm:mr-2"/>
             <span className="hidden sm:inline">Settings</span>
-             <span className="sm:hidden">Setup</span>
+            <span className="sm:hidden">Setup</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
           {!hasInitialSetup && !isSleepModeActive && (
-            <Card className="border-accent shadow-lg bg-muted">
-              <CardHeader className="text-center">
+            <Card className="border-accent shadow-lg bg-muted text-center">
+              <CardHeader>
                 <Sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
                 <CardTitle className="text-2xl text-foreground">Welcome to PowerPing!</CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
                   Let's get you set up to start saving energy.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 text-center">
+              <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
                   To unlock personalized AI insights, please add your appliances.
                 </p>

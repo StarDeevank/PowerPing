@@ -16,27 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-// Select components are no longer needed as applianceType is removed
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
 import type { Appliance } from "@/types";
-
-// applianceTypes array is no longer needed
-// const applianceTypes = [
-//   "Light", "Fan", "Air Conditioner", "Refrigerator", "Television",
-//   "Washing Machine", "Microwave", "Oven", "Geyser/Water Heater", "Computer/Laptop",
-//   "Charger", "Pump", "Speaker", "Router/Modem", "Other"
-// ] as const;
 
 const applianceSchema = z.object({
   deviceName: z.string().min(2, "Device name must be at least 2 characters.").max(50, "Device name too long."),
   room: z.string().min(2, "Room name must be at least 2 characters.").max(50, "Room name too long."),
-  // applianceType: z.string().min(1, "Appliance type is required."), // Removed
   powerRating: z.coerce.number().min(0, "Power rating must be non-negative.").optional().or(z.literal('')),
   estimatedDailyUsage: z.coerce.number().min(0, "Usage must be non-negative.").max(24, "Usage cannot exceed 24 hours."),
   status: z.boolean(),
@@ -59,7 +43,6 @@ export function ApplianceForm({ onSubmit, initialData, submitButtonText = "Add A
     defaultValues: {
       deviceName: initialData?.deviceName || "",
       room: initialData?.room || "",
-      // applianceType: initialData?.applianceType || "", // Removed
       powerRating: initialData?.powerRating || undefined,
       estimatedDailyUsage: initialData?.estimatedDailyUsage || 0,
       status: initialData?.status || false,
@@ -72,8 +55,8 @@ export function ApplianceForm({ onSubmit, initialData, submitButtonText = "Add A
         powerRating: values.powerRating === '' || values.powerRating === undefined ? undefined : Number(values.powerRating)
     };
     onSubmit(submissionValues);
-    if (!initialData?.id) { // Reset form only if adding new
-      form.reset({ deviceName: "", room: "", /* applianceType: "", */ powerRating: undefined, estimatedDailyUsage: 0, status: false });
+    if (!initialData?.id) { 
+      form.reset({ deviceName: "", room: "", powerRating: undefined, estimatedDailyUsage: 0, status: false });
     }
   };
 
@@ -106,30 +89,6 @@ export function ApplianceForm({ onSubmit, initialData, submitButtonText = "Add A
             </FormItem>
           )}
         />
-        {/* ApplianceType Field Removed
-        <FormField
-          control={form.control}
-          name="applianceType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Appliance Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select appliance type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {applianceTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        */}
         <FormField
           control={form.control}
           name="powerRating"
@@ -156,14 +115,14 @@ export function ApplianceForm({ onSubmit, initialData, submitButtonText = "Add A
             <FormItem>
               <FormLabel>Estimated Daily Usage (hours)</FormLabel>
               <FormControl>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                   <Input
                     type="number"
                     placeholder="e.g., 2.5"
                     value={field.value}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                     step="0.1"
-                    className="w-1/3"
+                    className="w-full sm:w-1/3" // Adjusted for responsiveness
                   />
                   <Slider
                     min={0}
@@ -171,7 +130,7 @@ export function ApplianceForm({ onSubmit, initialData, submitButtonText = "Add A
                     step={0.5}
                     value={[field.value]}
                     onValueChange={(value) => field.onChange(value[0])}
-                    className="flex-grow"
+                    className="w-full sm:flex-grow" // Adjusted for responsiveness
                   />
                 </div>
               </FormControl>
@@ -196,10 +155,11 @@ export function ApplianceForm({ onSubmit, initialData, submitButtonText = "Add A
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+        <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-base py-3">
           {submitButtonText}
         </Button>
       </form>
     </Form>
   );
 }
+

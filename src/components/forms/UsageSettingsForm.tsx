@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as z from "zod";
@@ -61,13 +62,13 @@ export function UsageSettingsForm({ onSubmit, initialData }: UsageSettingsFormPr
             <FormItem>
               <FormLabel>Monthly Electricity Bill Goal ({form.watch('currency')})</FormLabel>
               <FormControl>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                    <Input 
                     type="number" 
                     placeholder="Enter your goal" 
                     value={field.value}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                    className="w-1/2"
+                    className="w-full sm:w-1/2" // Adjusted for responsiveness
                   />
                   <Slider
                     min={0}
@@ -75,7 +76,7 @@ export function UsageSettingsForm({ onSubmit, initialData }: UsageSettingsFormPr
                     step={form.watch('currency') === '₹' ? 100 : 10}
                     value={[field.value]}
                     onValueChange={(value) => field.onChange(value[0])}
-                    className="w-1/2"
+                    className="w-full sm:flex-grow" // Adjusted for responsiveness
                   />
                 </div>
               </FormControl>
@@ -109,3 +110,4 @@ export function UsageSettingsForm({ onSubmit, initialData }: UsageSettingsFormPr
     </Form>
   );
 }
+
