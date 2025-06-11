@@ -14,8 +14,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateReminderRulesInputSchema = z.object({
-  homeSize: z.enum(['1BHK', '2BHK', '3BHK', '4BHK+']).describe('Size of the home (e.g., 1BHK, 2BHK).'),
-  numberOfRooms: z.number().int().positive().describe('Number of rooms in the home.'),
+  // homeSize: z.enum(['1BHK', '2BHK', '3BHK', '4BHK+']).describe('Size of the home (e.g., 1BHK, 2BHK).'), // Removed
+  // numberOfRooms: z.number().int().positive().describe('Number of rooms in the home.'), // Removed
   appliances: z
     .array(
       z.object({
@@ -59,12 +59,10 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateReminderRulesOutputSchema},
   prompt: `You are an AI assistant that helps users save energy by generating intelligent reminder rules for their appliances.
 
-  Based on the following home configuration and usage settings, generate a list of reminder rules. These rules should help the user achieve their monthly electricity bill goal and be specific and actionable.
+  Based on the following appliance usage and energy goals, generate a list of reminder rules. These rules should help the user achieve their monthly electricity bill goal and be specific and actionable.
   Tailor the reminder rules to the specific types of appliances listed (using the "Device Name"). For example, a reminder for a 'Fan' (e.g., "Turn off fan in {{room}} if unused") might be different from a reminder for an 'Oven' (e.g., "Don't forget to turn off the {{deviceName}} in the {{room}} after use.").
   Consider common energy wasting scenarios for each type of appliance and create rules to address them. For instance, suggest turning off lights in unoccupied rooms, or not leaving entertainment devices (like TVs or Game Consoles) on standby for extended periods.
 
-  Home Size: {{homeSize}}
-  Number of Rooms: {{numberOfRooms}}
   Appliances:
   {{#each appliances}}
   - Device: {{deviceName}}, Room: {{room}}, Estimated Daily Usage: {{estimatedDailyUsage}} hours

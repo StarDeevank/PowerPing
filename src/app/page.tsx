@@ -3,9 +3,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Removed DialogTrigger for HomeConfig
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { HomeConfigurationForm } from '@/components/forms/HomeConfigurationForm';
+// import { HomeConfigurationForm } from '@/components/forms/HomeConfigurationForm'; // Removed
 import { UsageSettingsForm } from '@/components/forms/UsageSettingsForm';
 import { ApplianceForm, type ApplianceFormValues } from '@/components/forms/ApplianceForm';
 import ApplianceListItem from '@/components/dashboard/ApplianceListItem';
@@ -17,7 +17,7 @@ import SectionTitle from '@/components/common/SectionTitle';
 import EnergyConsumptionChart from '@/components/dashboard/EnergyConsumptionChart';
 import LiveWattageChart from '@/components/dashboard/LiveWattageChart';
 import type {
-  Appliance, HomeConfiguration, UsageSettings, HomeSize,
+  Appliance, UsageSettings, // HomeConfiguration, HomeSize removed
   EnergyPredictionData, DisplayIntelligentReminder, DisplayPersonalizedTip
 } from '@/types';
 import { predictEnergyUsage } from '@/ai/flows/energy-prediction';
@@ -25,13 +25,12 @@ import { generatePersonalizedTips } from '@/ai/flows/personalized-tips';
 import { generateReminderRules } from '@/ai/flows/intelligent-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw, Sparkles, School, BookOpen } from 'lucide-react';
+import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw, Sparkles, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-
-const initialHomeConfig: HomeConfiguration = { homeSize: '', numberOfRooms: 1 };
+// const initialHomeConfig: HomeConfiguration = { homeSize: '', numberOfRooms: 1 }; // Removed
 const initialUsageSettings: UsageSettings = { monthlyElectricityBillGoal: 1000, currency: '₹' };
 
 const MAX_LIVE_GRAPH_POINTS = 30;
@@ -40,7 +39,7 @@ const REALTIME_UPDATE_INTERVAL = 1000; // ms
 export default function DashboardPage() {
   const { toast } = useToast();
 
-  const [homeConfiguration, setHomeConfiguration] = useState<HomeConfiguration>(initialHomeConfig);
+  // const [homeConfiguration, setHomeConfiguration] = useState<HomeConfiguration>(initialHomeConfig); // Removed
   const [usageSettings, setUsageSettings] = useState<UsageSettings>(initialUsageSettings);
   const [appliances, setAppliances] = useState<Appliance[]>([]);
   const [energyPrediction, setEnergyPrediction] = useState<EnergyPredictionData | null>(null);
@@ -50,7 +49,7 @@ export default function DashboardPage() {
   const [isLoadingTips, setIsLoadingTips] = useState(false);
   const [isLoadingReminders, setIsLoadingReminders] = useState(false);
   const [isApplianceFormOpen, setIsApplianceFormOpen] = useState(false);
-  const [isHomeConfigDialogOpen, setIsHomeConfigDialogOpen] = useState(false);
+  // const [isHomeConfigDialogOpen, setIsHomeConfigDialogOpen] = useState(false); // Removed
   const [isUsageSettingsDialogOpen, setIsUsageSettingsDialogOpen] = useState(false);
   const [editingAppliance, setEditingAppliance] = useState<Appliance | undefined>(undefined);
   const [isSleepModeActive, setIsSleepModeActive] = useState(false);
@@ -63,8 +62,8 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    const storedHomeConfig = localStorage.getItem('powerping_homeConfig');
-    if (storedHomeConfig) setHomeConfiguration(JSON.parse(storedHomeConfig));
+    // const storedHomeConfig = localStorage.getItem('powerping_homeConfig'); // Removed
+    // if (storedHomeConfig) setHomeConfiguration(JSON.parse(storedHomeConfig)); // Removed
     const storedUsageSettings = localStorage.getItem('powerping_usageSettings');
     if (storedUsageSettings) setUsageSettings(JSON.parse(storedUsageSettings));
     const storedAppliances = localStorage.getItem('powerping_appliances');
@@ -73,25 +72,25 @@ export default function DashboardPage() {
     if (storedSleepMode) setIsSleepModeActive(JSON.parse(storedSleepMode));
   }, []);
 
-  useEffect(() => { localStorage.setItem('powerping_homeConfig', JSON.stringify(homeConfiguration));}, [homeConfiguration]);
+  // useEffect(() => { localStorage.setItem('powerping_homeConfig', JSON.stringify(homeConfiguration));}, [homeConfiguration]); // Removed
   useEffect(() => { localStorage.setItem('powerping_usageSettings', JSON.stringify(usageSettings));}, [usageSettings]);
   useEffect(() => { localStorage.setItem('powerping_appliances', JSON.stringify(appliances));}, [appliances]);
   useEffect(() => { localStorage.setItem('powerping_sleepMode', JSON.stringify(isSleepModeActive));}, [isSleepModeActive]);
 
   const fetchAIData = useCallback(async () => {
-    if (isSleepModeActive || !homeConfiguration.homeSize || appliances.length === 0) {
+    if (isSleepModeActive || appliances.length === 0) { // Condition updated
       setEnergyPrediction(null);
       setPersonalizedTips([]);
       setIntelligentReminders([]);
-      if (isSleepModeActive && homeConfiguration.homeSize && appliances.length > 0) { 
+      if (isSleepModeActive && appliances.length > 0) { 
         toast({ title: "Sleep Mode Active", description: "AI insights are paused." });
       }
       return;
     }
 
     const commonInput = {
-      homeSize: homeConfiguration.homeSize as HomeSize,
-      numberOfRooms: homeConfiguration.numberOfRooms,
+      // homeSize: homeConfiguration.homeSize as HomeSize, // Removed
+      // numberOfRooms: homeConfiguration.numberOfRooms, // Removed
       appliances: appliances.map(a => ({ deviceName: a.deviceName, room: a.room, estimatedDailyUsage: a.estimatedDailyUsage, status: a.status })),
       monthlyElectricityBillGoal: usageSettings.monthlyElectricityBillGoal,
     };
@@ -122,7 +121,11 @@ export default function DashboardPage() {
 
     setIsLoadingReminders(true);
     try {
-      const remindersResult = await generateReminderRules({ ...commonInput, appliances: appliances.map(a => ({ deviceName: a.deviceName, room: a.room, estimatedDailyUsage: a.estimatedDailyUsage })) });
+      // For reminders, pass only necessary appliance info if schema changed
+      const remindersResult = await generateReminderRules({
+        appliances: appliances.map(a => ({ deviceName: a.deviceName, room: a.room, estimatedDailyUsage: a.estimatedDailyUsage })),
+        monthlyElectricityBillGoal: usageSettings.monthlyElectricityBillGoal,
+      });
       setIntelligentReminders(remindersResult.reminderRules.map((rule, index) => ({ id: `reminder-${index}`, applianceName: rule.applianceName, rule: rule.rule })));
     } catch (error) {
       console.error("Error fetching intelligent reminders:", error);
@@ -135,7 +138,7 @@ export default function DashboardPage() {
         toast({ title: "AI Insights Updated", description: "Predictions, tips, and reminders are up to date." });
     }
 
-  }, [homeConfiguration, usageSettings, appliances, toast, isSleepModeActive]);
+  }, [usageSettings, appliances, toast, isSleepModeActive]); // homeConfiguration removed from dependencies
 
   useEffect(() => { fetchAIData(); }, [fetchAIData]);
 
@@ -178,7 +181,7 @@ export default function DashboardPage() {
   }, [appliances, usageSettings, isSleepModeActive, timeCounter]);
 
 
-  const handleHomeConfigSubmit = (data: HomeConfiguration) => { setHomeConfiguration(data); setIsHomeConfigDialogOpen(false); toast({ title: "Success", description: "Home configuration saved!" }); };
+  // const handleHomeConfigSubmit = (data: HomeConfiguration) => { setHomeConfiguration(data); setIsHomeConfigDialogOpen(false); toast({ title: "Success", description: "Home configuration saved!" }); }; // Removed
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
 
   const handleApplianceSubmit = (data: ApplianceFormValues) => {
@@ -223,12 +226,13 @@ export default function DashboardPage() {
   
   const isAIDataLoading = isLoadingPrediction || isLoadingTips || isLoadingReminders;
 
-  const hasInitialSetup = homeConfiguration.homeSize && appliances.length > 0;
+  const hasInitialSetup = appliances.length > 0; // Condition updated
 
   return (
     <div className="space-y-6">
+      <h1 className="text-3xl font-bold text-foreground pt-2">PowerPing Dashboard</h1>
       
-      <div className="flex justify-end items-center pt-2 space-x-2">
+      <div className="flex justify-end items-center space-x-2">
          <Button 
             variant="outline" 
             size="sm" 
@@ -252,12 +256,7 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
       
-      <Dialog open={isHomeConfigDialogOpen} onOpenChange={setIsHomeConfigDialogOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Home Configuration</DialogTitle></DialogHeader>
-          <HomeConfigurationForm onSubmit={handleHomeConfigSubmit} initialData={homeConfiguration} />
-        </DialogContent>
-      </Dialog>
+      {/* Dialog for Home Configuration Removed */}
 
       <Dialog open={isUsageSettingsDialogOpen} onOpenChange={setIsUsageSettingsDialogOpen}>
         <DialogContent>
@@ -308,33 +307,26 @@ export default function DashboardPage() {
             <Card className="border-accent shadow-lg bg-muted">
               <CardHeader className="text-center">
                 <Sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
-                <CardTitle className="text-2xl text-foreground">Welcome to WattWatcher AI!</CardTitle>
+                <CardTitle className="text-2xl text-foreground">Welcome to PowerPing!</CardTitle>
                 <CardDescription className="text-base text-muted-foreground">
-                  Let's get you set up to start saving energy and money.
+                  Let's get you set up to start saving energy.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 text-center">
                 <p className="text-muted-foreground">
-                  To unlock personalized AI insights, predictions, and reminders, please provide some details about your home and appliances.
+                  To unlock personalized AI insights, please add your appliances.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
-                  <Button 
-                    size="lg" 
-                    onClick={() => setIsHomeConfigDialogOpen(true)}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
-                    <Home className="mr-2 h-5 w-5" /> Configure Your Home
-                  </Button>
                   <Button 
                     size="lg" 
                     onClick={openAddApplianceForm}
                     className="bg-accent text-accent-foreground hover:bg-accent/90"
                   >
-                    <PlusCircle className="mr-2 h-5 w-5" /> Add First Appliance
+                    <PlusCircle className="mr-2 h-5 w-5" /> Add Your First Appliance
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground pt-2">
-                  You can always update these later in the 'Settings' and 'Appliances' tabs.
+                  You can add more appliances and adjust usage settings later.
                 </p>
               </CardContent>
             </Card>
@@ -458,7 +450,7 @@ export default function DashboardPage() {
           ) : (
              <Card>
                 <CardHeader><CardTitle>Live Stats Unavailable</CardTitle></CardHeader>
-                <CardContent><p className="text-muted-foreground">Configure home and add appliances to see live statistics.</p></CardContent>
+                <CardContent><p className="text-muted-foreground">Add appliances to see live statistics.</p></CardContent>
             </Card>
           )}
         </TabsContent>
@@ -469,7 +461,7 @@ export default function DashboardPage() {
              <Card>
                 <CardHeader><CardTitle>AI Insights Paused</CardTitle></CardHeader>
                 <CardContent><p className="text-muted-foreground">
-                    {isSleepModeActive ? "Reminders and Tips are paused in Sleep Mode." : "Configure settings and add appliances to get AI insights."}
+                    {isSleepModeActive ? "Reminders and Tips are paused in Sleep Mode." : "Add appliances to get AI insights."}
                 </p></CardContent>
             </Card>
            ) : (
@@ -486,9 +478,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader><CardTitle className="text-lg">Core Configuration</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <Button onClick={() => setIsHomeConfigDialogOpen(true)} variant="outline" className="w-full justify-start text-base py-6">
-                  <Home className="mr-3 h-5 w-5" /> Home Setup
-                </Button>
+                {/* Button for Home Setup Removed */}
                 <Button onClick={() => setIsUsageSettingsDialogOpen(true)} variant="outline" className="w-full justify-start text-base py-6">
                   <SlidersHorizontal className="mr-3 h-5 w-5" /> Usage Goals & Currency
                 </Button>
@@ -534,4 +524,6 @@ export default function DashboardPage() {
     
 
     
+
+
 

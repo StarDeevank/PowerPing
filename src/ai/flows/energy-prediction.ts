@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -12,8 +13,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const EnergyPredictionInputSchema = z.object({
-  homeSize: z.string().describe('Size of the home (e.g., 1BHK, 2BHK).'),
-  numberOfRooms: z.number().describe('Number of rooms in the home.'),
+  // homeSize: z.string().describe('Size of the home (e.g., 1BHK, 2BHK).'), // Removed
+  // numberOfRooms: z.number().describe('Number of rooms in the home.'), // Removed
   appliances: z
     .array(
       z.object({
@@ -50,8 +51,6 @@ const prompt = ai.definePrompt({
   output: {schema: EnergyPredictionOutputSchema},
   prompt: `You are an energy consumption expert. Analyze the following data to predict daily and monthly energy usage and costs.
 
-Home Size: {{{homeSize}}}
-Number of Rooms: {{{numberOfRooms}}}
 Appliances: {{#each appliances}}- Device: {{{deviceName}}}, Room: {{{room}}}, Usage: {{{estimatedDailyUsage}}} hours, Status: {{#if status}}On{{else}}Off{{/if}}\n{{/each}}
 Monthly Electricity Bill Goal: {{{currency}}} {{{monthlyElectricityBillGoal}}}
 
@@ -62,7 +61,7 @@ Based on this information, provide:
 - estimatedMonthlyCost ({{{currency}}})
 - isWithinGoal (true/false, based on whether the estimated monthly cost is within the monthlyElectricityBillGoal)
 
-Ensure that the output is accurate and follows the specified units and currency.
+Ensure that the output is accurate and follows the specified units and currency. Consider typical power ratings for common household appliances when making predictions.
 `,
 });
 
@@ -77,3 +76,4 @@ const predictEnergyUsageFlow = ai.defineFlow(
     return output!;
   }
 );
+

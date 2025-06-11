@@ -8,12 +8,13 @@ export interface Appliance {
   status: boolean; // On/Off
 }
 
-export type HomeSize = '1BHK' | '2BHK' | '3BHK' | '4BHK+' | '';
+// HomeConfiguration is no longer needed as homeSize and numberOfRooms are removed.
+// export type HomeSize = '1BHK' | '2BHK' | '3BHK' | '4BHK+' | '';
 
-export interface HomeConfiguration {
-  homeSize: HomeSize;
-  numberOfRooms: number;
-}
+// export interface HomeConfiguration {
+//   homeSize: HomeSize;
+//   numberOfRooms: number;
+// }
 
 export interface UsageSettings {
   monthlyElectricityBillGoal: number;
@@ -24,13 +25,11 @@ export interface UsageSettings {
 
 // Input for personalizedTipsFlow
 export interface PersonalizedTipsGenAIInput {
-  homeSize: HomeSize;
-  numberOfRooms: number;
   appliances: Array<{
     deviceName: string;
     room: string;
     estimatedDailyUsage: number;
-    status: boolean; // Added status as it's used by the prompt
+    status: boolean;
   }>;
   monthlyElectricityBillGoal: number;
 }
@@ -42,8 +41,6 @@ export interface PersonalizedTipsGenAIOutput {
 
 // Input for predictEnergyUsageFlow
 export interface EnergyPredictionGenAIInput {
-  homeSize: HomeSize;
-  numberOfRooms: number;
   appliances: Array<{
     deviceName: string;
     room: string;
@@ -66,13 +63,10 @@ export interface EnergyPredictionData {
 
 // Input for generateReminderRulesFlow
 export interface IntelligentRemindersGenAIInput {
-  homeSize: HomeSize;
-  numberOfRooms: number;
   appliances: Array<{
     deviceName: string;
     room: string;
     estimatedDailyUsage: number;
-    // status is not strictly needed for rule generation based on usage, but could be added
   }>;
   monthlyElectricityBillGoal: number;
 }
@@ -99,9 +93,8 @@ export interface DisplayIntelligentReminder {
   rule: string;
 }
 
-// Removed Airbnb-style types
-// export interface Listing { ... }
-export interface RealTimeDataPoint { // Kept for RealTimeGraph if re-enabled
+export interface RealTimeDataPoint {
   time: number;
   value: number;
 }
+

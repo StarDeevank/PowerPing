@@ -13,10 +13,10 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const PersonalizedTipsInputSchema = z.object({
-  homeSize: z
-    .string()
-    .describe('The size of the home (e.g., 1BHK, 2BHK, 3BHK).'),
-  numberOfRooms: z.number().describe('The number of rooms in the home.'),
+  // homeSize: z
+  //   .string()
+  //   .describe('The size of the home (e.g., 1BHK, 2BHK, 3BHK).'), // Removed
+  // numberOfRooms: z.number().describe('The number of rooms in the home.'), // Removed
   appliances: z
     .array(
       z.object({
@@ -52,10 +52,8 @@ const prompt = ai.definePrompt({
   name: 'personalizedTipsPrompt',
   input: {schema: PersonalizedTipsInputSchema},
   output: {schema: PersonalizedTipsOutputSchema},
-  prompt: `You are an AI assistant that provides personalized energy-saving tips based on the user's home configuration and appliance usage patterns.
+  prompt: `You are an AI assistant that provides personalized energy-saving tips based on the user's appliance usage patterns and energy goals.
 
-  Home Size: {{{homeSize}}}
-  Number of Rooms: {{{numberOfRooms}}}
   Appliances:
   {{#each appliances}}
   - Device Name: {{{deviceName}}}, Room: {{{room}}}, Estimated Daily Usage: {{{estimatedDailyUsage}}} hours, Status: {{#if status}}On{{else}}Off{{/if}}
