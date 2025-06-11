@@ -25,7 +25,7 @@ import { generatePersonalizedTips } from '@/ai/flows/personalized-tips';
 import { generateReminderRules } from '@/ai/flows/intelligent-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw } from 'lucide-react';
+import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -304,45 +304,91 @@ export default function DashboardPage() {
         </TabsList>
 
         <TabsContent value="dashboard">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              {(!hasInitialSetup || isSleepModeActive) && (
-                 <Card>
-                    <CardHeader><CardTitle>Dashboard Unavailable</CardTitle></CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">
-                            {isSleepModeActive ? "Dashboard features are paused in Sleep Mode." : "Please complete home configuration and add appliances to view the dashboard."}
-                        </p>
-                    </CardContent>
-                </Card>
-              )}
-              {hasInitialSetup && !isSleepModeActive && <EnergyConsumptionChart />}
-              {hasInitialSetup && !isSleepModeActive && (
-                <div>
-                  <SectionTitle>Real-Time Feedback</SectionTitle>
-                  {appliances.some(app => app.status) ? (
-                    <div className="space-y-3">
-                      {appliances.filter(app => app.status).map(app => (
-                        <RealTimeFeedbackItem key={app.id} appliance={app} onToggleStatus={handleToggleApplianceStatus} />
-                      ))}
-                    </div>
-                  ) : <p className="text-muted-foreground">No appliances are currently active.</p>}
+          {!hasInitialSetup && !isSleepModeActive && (
+            <Card className="border-accent shadow-lg">
+              <CardHeader className="text-center">
+                <Sparkles className="h-12 w-12 text-primary mx-auto mb-3" />
+                <CardTitle className="text-2xl">Welcome to PowerPing!</CardTitle>
+                <CardDescription className="text-base text-muted-foreground">
+                  Let's get you set up to start saving energy and money.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-center">
+                <p className="text-muted-foreground">
+                  To unlock personalized AI insights, predictions, and reminders, please provide some details about your home and appliances.
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
+                  <Button 
+                    size="lg" 
+                    onClick={() => setIsHomeConfigDialogOpen(true)}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Home className="mr-2 h-5 w-5" /> Configure Your Home
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    onClick={openAddApplianceForm}
+                    className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  >
+                    <PlusCircle className="mr-2 h-5 w-5" /> Add First Appliance
+                  </Button>
                 </div>
-              )}
+                <p className="text-xs text-muted-foreground pt-2">
+                  You can always update these later in the 'Settings' and 'Appliances' tabs.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {isSleepModeActive && !hasInitialSetup && (
+             <Card>
+                <CardHeader><CardTitle>Dashboard Unavailable</CardTitle></CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">
+                        Dashboard features are paused in Sleep Mode. Please deactivate Sleep Mode and complete setup.
+                    </p>
+                </CardContent>
+            </Card>
+          )}
+
+          {hasInitialSetup && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                 {isSleepModeActive ? (
+                     <Card>
+                        <CardHeader><CardTitle>Dashboard Paused</CardTitle></CardHeader>
+                        <CardContent><p className="text-muted-foreground">Dashboard features are paused in Sleep Mode.</p></CardContent>
+                    </Card>
+                 ) : (
+                    <>
+                        <EnergyConsumptionChart />
+                        <div>
+                        <SectionTitle>Real-Time Feedback</SectionTitle>
+                        {appliances.some(app => app.status) ? (
+                            <div className="space-y-3">
+                            {appliances.filter(app => app.status).map(app => (
+                                <RealTimeFeedbackItem key={app.id} appliance={app} onToggleStatus={handleToggleApplianceStatus} />
+                            ))}
+                            </div>
+                        ) : <p className="text-muted-foreground">No appliances are currently active.</p>}
+                        </div>
+                    </>
+                 )}
+              </div>
+              <div className="space-y-6">
+                {isSleepModeActive ? (
+                  <Card>
+                    <CardHeader><CardTitle>AI Energy Prediction</CardTitle></CardHeader>
+                    <CardContent><p className="text-muted-foreground">
+                      Insights are paused in Sleep Mode.
+                    </p></CardContent>
+                  </Card>
+                ) : (
+                  <EnergyPredictionCard data={energyPrediction} isLoading={isLoadingPrediction} />
+                )}
+              </div>
             </div>
-            <div className="space-y-6">
-              {isSleepModeActive || !hasInitialSetup ? (
-                <Card>
-                  <CardHeader><CardTitle>AI Energy Prediction</CardTitle></CardHeader>
-                  <CardContent><p className="text-muted-foreground">
-                    {isSleepModeActive ? "Insights are paused in Sleep Mode." : "Configure settings and add appliances to see predictions."}
-                  </p></CardContent>
-                </Card>
-              ) : (
-                <EnergyPredictionCard data={energyPrediction} isLoading={isLoadingPrediction} />
-              )}
-            </div>
-          </div>
+          )}
         </TabsContent>
 
         <TabsContent value="appliances">
@@ -473,7 +519,6 @@ export default function DashboardPage() {
     </div>
   );
 }
-
     
 
     
