@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as z from "zod";
@@ -15,16 +16,34 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Appliance } from "@/types";
+
+const applianceTypes = [
+  "Light", "Fan", "Air Conditioner", "Refrigerator", "Television", 
+  "Washing Machine", "Microwave", "Oven", "Geyser/Water Heater", "Computer/Laptop", 
+  "Charger", "Pump", "Speaker", "Router/Modem", "Other"
+] as const;
 
 const applianceSchema = z.object({
   deviceName: z.string().min(2, "Device name must be at least 2 characters.").max(50, "Device name too long."),
   room: z.string().min(2, "Room name must be at least 2 characters.").max(50, "Room name too long."),
+  applianceType: z.string().min(1, "Appliance type is required."),
+  powerRating: z.coerce.number().min(0, "Power rating must be non-negative.").optional().or(z.literal('')), // Optional, can be empty string then coerced
   estimatedDailyUsage: z.coerce.number().min(0, "Usage must be non-negative.").max(24, "Usage cannot exceed 24 hours."),
   status: z.boolean(),
 });
 
-export type ApplianceFormValues = z.infer<typeof applianceSchema>;
+export type ApplianceFormValues = Omit<z.infer<typeof applianceSchema>, 'powerRating'> & {
+  powerRating?: number;
+};
+
 
 interface ApplianceFormProps {
   onSubmit: (data: ApplianceFormValues) => void;
@@ -38,15 +57,21 @@ export function ApplianceForm({ onSubmit, initialData, submitButtonText = "Add A
     defaultValues: {
       deviceName: initialData?.deviceName || "",
       room: initialData?.room || "",
+      applianceType: initialData?.applianceType || "",
+      powerRating: initialData?.powerRating || undefined,
       estimatedDailyUsage: initialData?.estimatedDailyUsage || 0,
       status: initialData?.status || false,
     },
   });
 
-  const handleSubmit = (values: ApplianceFormValues) => {
-    onSubmit(values);
+  const handleSubmit = (values: z.infer<typeof applianceSchema>) => {
+    const submissionValues: ApplianceFormValues = {
+        ...values,
+        powerRating: values.powerRating === '' || values.powerRating === undefined ? undefined : Number(values.powerRating)
+    };
+    onSubmit(submissionValues);
     if (!initialData?.id) { // Reset form only if adding new
-      form.reset();
+      form.reset({ deviceName: "", room: "", applianceType: "", powerRating: undefined, estimatedDailyUsage: 0, status: false });
     }
   };
 
@@ -74,6 +99,47 @@ export function ApplianceForm({ onSubmit, initialData, submitButtonText = "Add A
               <FormLabel>Room</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Living Room" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="applianceType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Appliance Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select appliance type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {applianceTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="powerRating"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Power Rating (Watts)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="e.g., 60 (Optional)" 
+                  {...field} 
+                  onChange={e => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  value={field.value === undefined ? '' : field.value}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

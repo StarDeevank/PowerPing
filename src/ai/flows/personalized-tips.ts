@@ -13,15 +13,13 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const PersonalizedTipsInputSchema = z.object({
-  // homeSize: z
-  //   .string()
-  //   .describe('The size of the home (e.g., 1BHK, 2BHK, 3BHK).'), // Removed
-  // numberOfRooms: z.number().describe('The number of rooms in the home.'), // Removed
   appliances: z
     .array(
       z.object({
         deviceName: z.string().describe('The name of the appliance.'),
         room: z.string().describe('The room where the appliance is located.'),
+        applianceType: z.string().describe('Category/type of the appliance (e.g., Light, Fan, AC).'),
+        powerRating: z.number().optional().describe('Power rating of the appliance in Watts (if known).'),
         estimatedDailyUsage: z
           .number()
           .describe('The estimated daily usage of the appliance in hours.'),
@@ -54,16 +52,22 @@ const prompt = ai.definePrompt({
   output: {schema: PersonalizedTipsOutputSchema},
   prompt: `You are an AI assistant that provides personalized energy-saving tips based on the user's appliance usage patterns and energy goals.
 
-  Appliances:
-  {{#each appliances}}
-  - Device Name: {{{deviceName}}}, Room: {{{room}}}, Estimated Daily Usage: {{{estimatedDailyUsage}}} hours, Status: {{#if status}}On{{else}}Off{{/if}}
-  {{/each}}
-  Monthly Electricity Bill Goal: {{{monthlyElectricityBillGoal}}}
+Appliances:
+{{#each appliances}}
+- Device Name: {{{deviceName}}} (Type: {{{applianceType}}})
+  Room: {{{room}}}
+  {{#if powerRating}}Power Rating: {{{powerRating}}} Watts{{/if}}
+  Estimated Daily Usage: {{{estimatedDailyUsage}}} hours
+  Status: {{#if status}}On{{else}}Off{{/if}}
+{{/each}}
 
-  Generate a list of personalized energy-saving tips. These tips should be specific to the user's situation and actionable.
-  Crucially, tailor your tips to the specific types of appliances listed (using the "Device Name"). For example, if a 'Geyser' or 'Water Heater' is listed with high usage, suggest tips relevant to water heating efficiency. If an 'Air Conditioner' or 'AC' is listed, provide advice for AC efficiency, like cleaning filters or using a programmable thermostat. If 'Lights' or 'Lamps' are mentioned, suggest using LED bulbs or turning them off in unused rooms. Avoid generic advice; make each tip relevant to one or more of the user's actual appliances and their usage patterns.
+Monthly Electricity Bill Goal: {{{monthlyElectricityBillGoal}}}
 
-  Tips:
+Generate a list of personalized energy-saving tips. These tips should be specific to the user's situation and actionable.
+Crucially, tailor your tips to the specific 'applianceType' and 'deviceName'. For example, if an 'Air Conditioner' ({{{applianceType}}}) is listed, provide advice for AC efficiency, like cleaning filters or using a programmable thermostat. If a 'Geyser/Water Heater' is listed with high usage, suggest tips relevant to water heating efficiency. If 'Light' or 'Lamp' are mentioned, suggest using LED bulbs or turning them off in unused rooms. If a 'powerRating' is provided, you can incorporate it into the tip (e.g., "Your {{{powerRating}}}W AC...").
+Avoid generic advice; make each tip relevant to one or more of the user's actual appliances and their usage patterns.
+
+Tips:
   `,
 });
 
@@ -78,4 +82,3 @@ const personalizedTipsFlow = ai.defineFlow(
     return output!;
   }
 );
-

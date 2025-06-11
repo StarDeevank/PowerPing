@@ -4,17 +4,11 @@ export interface Appliance {
   id: string;
   deviceName: string;
   room: string;
+  applianceType: string; // New: e.g., 'Light', 'Fan', 'AC'
+  powerRating?: number; // New: Optional, in Watts
   estimatedDailyUsage: number; // hours
   status: boolean; // On/Off
 }
-
-// HomeConfiguration is no longer needed as homeSize and numberOfRooms are removed.
-// export type HomeSize = '1BHK' | '2BHK' | '3BHK' | '4BHK+' | '';
-
-// export interface HomeConfiguration {
-//   homeSize: HomeSize;
-//   numberOfRooms: number;
-// }
 
 export interface UsageSettings {
   monthlyElectricityBillGoal: number;
@@ -28,6 +22,8 @@ export interface PersonalizedTipsGenAIInput {
   appliances: Array<{
     deviceName: string;
     room: string;
+    applianceType: string;
+    powerRating?: number;
     estimatedDailyUsage: number;
     status: boolean;
   }>;
@@ -44,6 +40,8 @@ export interface EnergyPredictionGenAIInput {
   appliances: Array<{
     deviceName: string;
     room: string;
+    applianceType: string;
+    powerRating?: number;
     estimatedDailyUsage: number;
     status: boolean;
   }>;
@@ -66,6 +64,8 @@ export interface IntelligentRemindersGenAIInput {
   appliances: Array<{
     deviceName: string;
     room: string;
+    applianceType: string;
+    powerRating?: number;
     estimatedDailyUsage: number;
   }>;
   monthlyElectricityBillGoal: number;
@@ -73,7 +73,7 @@ export interface IntelligentRemindersGenAIInput {
 
 // Output for generateReminderRulesFlow
 export interface IntelligentReminderRule {
-  applianceName: string;
+  applianceName: string; // This can remain deviceName if preferred by AI
   rule: string;
 }
 export interface IntelligentRemindersGenAIOutput {
@@ -97,4 +97,3 @@ export interface RealTimeDataPoint {
   time: number;
   value: number;
 }
-

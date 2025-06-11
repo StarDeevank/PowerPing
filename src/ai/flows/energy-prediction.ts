@@ -13,13 +13,13 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const EnergyPredictionInputSchema = z.object({
-  // homeSize: z.string().describe('Size of the home (e.g., 1BHK, 2BHK).'), // Removed
-  // numberOfRooms: z.number().describe('Number of rooms in the home.'), // Removed
   appliances: z
     .array(
       z.object({
         deviceName: z.string().describe('Name of the appliance.'),
         room: z.string().describe('Room where the appliance is located.'),
+        applianceType: z.string().describe('Category/type of the appliance (e.g., Light, Fan, AC).'),
+        powerRating: z.number().optional().describe('Power rating of the appliance in Watts (if known).'),
         estimatedDailyUsage: z.number().describe('Estimated daily usage in hours.'),
         status: z.boolean().describe('Whether the appliance is currently on or off.'),
       })
@@ -51,7 +51,15 @@ const prompt = ai.definePrompt({
   output: {schema: EnergyPredictionOutputSchema},
   prompt: `You are an energy consumption expert. Analyze the following data to predict daily and monthly energy usage and costs.
 
-Appliances: {{#each appliances}}- Device: {{{deviceName}}}, Room: {{{room}}}, Usage: {{{estimatedDailyUsage}}} hours, Status: {{#if status}}On{{else}}Off{{/if}}\n{{/each}}
+Appliances:
+{{#each appliances}}
+- Device: {{{deviceName}}} (Type: {{{applianceType}}})
+  Room: {{{room}}}
+  {{#if powerRating}}Power Rating: {{{powerRating}}} Watts{{/if}}
+  Usage: {{{estimatedDailyUsage}}} hours
+  Status: {{#if status}}On{{else}}Off{{/if}}
+{{/each}}
+
 Monthly Electricity Bill Goal: {{{currency}}} {{{monthlyElectricityBillGoal}}}
 
 Based on this information, provide:
@@ -61,7 +69,9 @@ Based on this information, provide:
 - estimatedMonthlyCost ({{{currency}}})
 - isWithinGoal (true/false, based on whether the estimated monthly cost is within the monthlyElectricityBillGoal)
 
-Ensure that the output is accurate and follows the specified units and currency. Consider typical power ratings for common household appliances when making predictions.
+Consider typical power ratings for common household appliances based on their 'applianceType' if 'powerRating' is not provided by the user. If 'powerRating' IS provided, prioritize that for calculations.
+Assume an average electricity cost of {{{currency}}}7/kWh for INR (₹) and {{{currency}}}0.15/kWh for USD ($) unless implicit from user's goal (though direct cost rates are more reliable for prediction than inferring from goal alone).
+Ensure that the output is accurate and follows the specified units and currency.
 `,
 });
 
@@ -76,4 +86,3 @@ const predictEnergyUsageFlow = ai.defineFlow(
     return output!;
   }
 );
-

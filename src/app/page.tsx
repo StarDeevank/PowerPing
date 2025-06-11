@@ -3,9 +3,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Removed DialogTrigger for HomeConfig
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { HomeConfigurationForm } from '@/components/forms/HomeConfigurationForm'; // Removed
 import { UsageSettingsForm } from '@/components/forms/UsageSettingsForm';
 import { ApplianceForm, type ApplianceFormValues } from '@/components/forms/ApplianceForm';
 import ApplianceListItem from '@/components/dashboard/ApplianceListItem';
@@ -17,7 +16,7 @@ import SectionTitle from '@/components/common/SectionTitle';
 import EnergyConsumptionChart from '@/components/dashboard/EnergyConsumptionChart';
 import LiveWattageChart from '@/components/dashboard/LiveWattageChart';
 import type {
-  Appliance, UsageSettings, // HomeConfiguration, HomeSize removed
+  Appliance, UsageSettings,
   EnergyPredictionData, DisplayIntelligentReminder, DisplayPersonalizedTip
 } from '@/types';
 import { predictEnergyUsage } from '@/ai/flows/energy-prediction';
@@ -28,18 +27,35 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Info, PlusCircle, Settings, BarChart2, Lightbulb, BellRing, Home, SlidersHorizontal, Zap, AlertCircle, Moon, Sun, RefreshCw, Sparkles, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/label"; // Ensure Label is imported
 
-// const initialHomeConfig: HomeConfiguration = { homeSize: '', numberOfRooms: 1 }; // Removed
 const initialUsageSettings: UsageSettings = { monthlyElectricityBillGoal: 1000, currency: '₹' };
 
 const MAX_LIVE_GRAPH_POINTS = 30;
 const REALTIME_UPDATE_INTERVAL = 1000; // ms
 
+// Helper for wattage estimation
+const getApplianceWattage = (appliance: Appliance): number => {
+    if (appliance.powerRating && appliance.powerRating > 0) {
+      return appliance.powerRating;
+    }
+    // Fallback estimations based on type - can be expanded
+    switch (appliance.applianceType.toLowerCase()) {
+      case 'light': return 10 + Math.random() * 10; // 10-20W LED
+      case 'fan': return 50 + Math.random() * 25; // 50-75W
+      case 'air conditioner': return 1000 + Math.random() * 500; // 1000-1500W
+      case 'refrigerator': return 100 + Math.random() * 100; // 100-200W (average running)
+      case 'television': return 60 + Math.random() * 90; // 60-150W
+      case 'geyser/water heater': return 2000 + Math.random() * 1000; // 2000-3000W
+      case 'computer/laptop': return 50 + Math.random() * 100; // 50-150W
+      default: return 75 + Math.random() * 75; // Generic fallback 75-150W
+    }
+};
+
+
 export default function DashboardPage() {
   const { toast } = useToast();
 
-  // const [homeConfiguration, setHomeConfiguration] = useState<HomeConfiguration>(initialHomeConfig); // Removed
   const [usageSettings, setUsageSettings] = useState<UsageSettings>(initialUsageSettings);
   const [appliances, setAppliances] = useState<Appliance[]>([]);
   const [energyPrediction, setEnergyPrediction] = useState<EnergyPredictionData | null>(null);
@@ -49,7 +65,6 @@ export default function DashboardPage() {
   const [isLoadingTips, setIsLoadingTips] = useState(false);
   const [isLoadingReminders, setIsLoadingReminders] = useState(false);
   const [isApplianceFormOpen, setIsApplianceFormOpen] = useState(false);
-  // const [isHomeConfigDialogOpen, setIsHomeConfigDialogOpen] = useState(false); // Removed
   const [isUsageSettingsDialogOpen, setIsUsageSettingsDialogOpen] = useState(false);
   const [editingAppliance, setEditingAppliance] = useState<Appliance | undefined>(undefined);
   const [isSleepModeActive, setIsSleepModeActive] = useState(false);
@@ -62,8 +77,6 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    // const storedHomeConfig = localStorage.getItem('powerping_homeConfig'); // Removed
-    // if (storedHomeConfig) setHomeConfiguration(JSON.parse(storedHomeConfig)); // Removed
     const storedUsageSettings = localStorage.getItem('powerping_usageSettings');
     if (storedUsageSettings) setUsageSettings(JSON.parse(storedUsageSettings));
     const storedAppliances = localStorage.getItem('powerping_appliances');
@@ -72,13 +85,12 @@ export default function DashboardPage() {
     if (storedSleepMode) setIsSleepModeActive(JSON.parse(storedSleepMode));
   }, []);
 
-  // useEffect(() => { localStorage.setItem('powerping_homeConfig', JSON.stringify(homeConfiguration));}, [homeConfiguration]); // Removed
   useEffect(() => { localStorage.setItem('powerping_usageSettings', JSON.stringify(usageSettings));}, [usageSettings]);
   useEffect(() => { localStorage.setItem('powerping_appliances', JSON.stringify(appliances));}, [appliances]);
   useEffect(() => { localStorage.setItem('powerping_sleepMode', JSON.stringify(isSleepModeActive));}, [isSleepModeActive]);
 
   const fetchAIData = useCallback(async () => {
-    if (isSleepModeActive || appliances.length === 0) { // Condition updated
+    if (isSleepModeActive || appliances.length === 0) {
       setEnergyPrediction(null);
       setPersonalizedTips([]);
       setIntelligentReminders([]);
@@ -89,9 +101,14 @@ export default function DashboardPage() {
     }
 
     const commonInput = {
-      // homeSize: homeConfiguration.homeSize as HomeSize, // Removed
-      // numberOfRooms: homeConfiguration.numberOfRooms, // Removed
-      appliances: appliances.map(a => ({ deviceName: a.deviceName, room: a.room, estimatedDailyUsage: a.estimatedDailyUsage, status: a.status })),
+      appliances: appliances.map(a => ({ 
+        deviceName: a.deviceName, 
+        room: a.room, 
+        applianceType: a.applianceType,
+        powerRating: a.powerRating,
+        estimatedDailyUsage: a.estimatedDailyUsage, 
+        status: a.status 
+      })),
       monthlyElectricityBillGoal: usageSettings.monthlyElectricityBillGoal,
     };
     
@@ -121,9 +138,14 @@ export default function DashboardPage() {
 
     setIsLoadingReminders(true);
     try {
-      // For reminders, pass only necessary appliance info if schema changed
       const remindersResult = await generateReminderRules({
-        appliances: appliances.map(a => ({ deviceName: a.deviceName, room: a.room, estimatedDailyUsage: a.estimatedDailyUsage })),
+        appliances: appliances.map(a => ({ 
+            deviceName: a.deviceName, 
+            room: a.room, 
+            applianceType: a.applianceType,
+            powerRating: a.powerRating,
+            estimatedDailyUsage: a.estimatedDailyUsage 
+        })),
         monthlyElectricityBillGoal: usageSettings.monthlyElectricityBillGoal,
       });
       setIntelligentReminders(remindersResult.reminderRules.map((rule, index) => ({ id: `reminder-${index}`, applianceName: rule.applianceName, rule: rule.rule })));
@@ -138,7 +160,7 @@ export default function DashboardPage() {
         toast({ title: "AI Insights Updated", description: "Predictions, tips, and reminders are up to date." });
     }
 
-  }, [usageSettings, appliances, toast, isSleepModeActive]); // homeConfiguration removed from dependencies
+  }, [usageSettings, appliances, toast, isSleepModeActive]);
 
   useEffect(() => { fetchAIData(); }, [fetchAIData]);
 
@@ -146,13 +168,15 @@ export default function DashboardPage() {
     if (isSleepModeActive) {
         setCurrentWattage(0); 
         setLiveGraphData([]); 
+        setEstimatedBillToday(0); // Reset daily bill in sleep mode
         return;
     }
     const interval = setInterval(() => {
       let totalWattage = 0;
       appliances.forEach(app => {
         if (app.status) {
-          totalWattage += 50 + (Math.random() * 50) + (app.estimatedDailyUsage * 10); 
+          const baseWattage = getApplianceWattage(app);
+          totalWattage += baseWattage + (Math.random() * baseWattage * 0.1); // Add small random fluctuation
         }
       });
       const newCurrentWattage = parseFloat(totalWattage.toFixed(0));
@@ -168,12 +192,14 @@ export default function DashboardPage() {
       });
       
       const costPerKWh = usageSettings.currency === '₹' ? 7 : 0.15; 
-      const currentKWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / 1000 / 3600); 
+      const currentKWhForInterval = (newCurrentWattage / 1000) * (REALTIME_UPDATE_INTERVAL / (1000 * 60 * 60)); // kWh for the interval
       
       setEstimatedBillToday(prevBill => parseFloat((prevBill + (currentKWhForInterval * costPerKWh)).toFixed(2)));
+      
       setEstimatedBillMonth(prev => {
-          const hourlyCost = (newCurrentWattage / 1000) * costPerKWh;
-          return parseFloat((hourlyCost * 24 * 30).toFixed(2));
+          const hourlyKWh = newCurrentWattage / 1000;
+          const hourlyCost = hourlyKWh * costPerKWh;
+          return parseFloat((hourlyCost * 24 * 30).toFixed(2)); // Estimated monthly based on current instant consumption
       });
 
     }, REALTIME_UPDATE_INTERVAL);
@@ -181,7 +207,6 @@ export default function DashboardPage() {
   }, [appliances, usageSettings, isSleepModeActive, timeCounter]);
 
 
-  // const handleHomeConfigSubmit = (data: HomeConfiguration) => { setHomeConfiguration(data); setIsHomeConfigDialogOpen(false); toast({ title: "Success", description: "Home configuration saved!" }); }; // Removed
   const handleUsageSettingsSubmit = (data: UsageSettings) => { setUsageSettings(data); setIsUsageSettingsDialogOpen(false); toast({ title: "Success", description: "Usage settings saved!" }); };
 
   const handleApplianceSubmit = (data: ApplianceFormValues) => {
@@ -189,7 +214,11 @@ export default function DashboardPage() {
       setAppliances(appliances.map(app => app.id === editingAppliance.id ? { ...editingAppliance, ...data } : app));
       toast({ title: "Success", description: "Appliance updated!" });
     } else {
-      const newAppliance: Appliance = { id: Date.now().toString(), ...data };
+      const newAppliance: Appliance = { 
+        id: Date.now().toString(), 
+        ...data, 
+        powerRating: data.powerRating ? Number(data.powerRating) : undefined 
+      };
       setAppliances([...appliances, newAppliance]);
       toast({ title: "Success", description: "Appliance added!" });
     }
@@ -217,16 +246,18 @@ export default function DashboardPage() {
     const newSleepModeState = !isSleepModeActive;
     setIsSleepModeActive(newSleepModeState);
     if (newSleepModeState) {
-      setEstimatedBillToday(0); 
+      setEstimatedBillToday(0); // Reset bill on activating sleep mode
       toast({ title: "Sleep Mode Activated", description: "AI insights paused. Live stats and some controls are limited." });
     } else {
+      // Optionally reset estimatedBillToday here too if you want a fresh start after awake
+      // setEstimatedBillToday(0); 
       toast({ title: "Sleep Mode Deactivated", description: "System returning to normal. AI insights will refresh." });
     }
   };
   
   const isAIDataLoading = isLoadingPrediction || isLoadingTips || isLoadingReminders;
 
-  const hasInitialSetup = appliances.length > 0; // Condition updated
+  const hasInitialSetup = appliances.length > 0;
 
   return (
     <div className="space-y-6">
@@ -256,8 +287,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog for Home Configuration Removed */}
-
       <Dialog open={isUsageSettingsDialogOpen} onOpenChange={setIsUsageSettingsDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Usage Settings</DialogTitle></DialogHeader>
@@ -478,7 +507,6 @@ export default function DashboardPage() {
             <Card>
               <CardHeader><CardTitle className="text-lg">Core Configuration</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                {/* Button for Home Setup Removed */}
                 <Button onClick={() => setIsUsageSettingsDialogOpen(true)} variant="outline" className="w-full justify-start text-base py-6">
                   <SlidersHorizontal className="mr-3 h-5 w-5" /> Usage Goals & Currency
                 </Button>
@@ -521,9 +549,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-    
-
-    
-
-
-
